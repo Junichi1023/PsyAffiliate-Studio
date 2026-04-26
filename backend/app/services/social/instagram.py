@@ -6,16 +6,16 @@ from .base import SocialPublisher
 class InstagramPublisher(SocialPublisher):
     def publish_text(self, text: str) -> dict:
         return {
-            "ok": False,
+            "ok": True,
             "provider": "instagram",
             "mock": True,
-            "message": "Instagram text publishing is not implemented in Phase 1.",
+            "message": "Mock Instagram text post accepted. Real Graph API integration is reserved for Phase 2.",
         }
 
     def publish_image_post(self, caption: str, image_path: str) -> dict:
         return {
-            "ok": False,
+            "ok": True,
             "provider": "instagram",
             "mock": True,
-            "message": "Instagram Graph API integration is reserved for Phase 2. Approval is required before posting.",
+            "message": "Mock Instagram image post accepted. Real Graph API integration is reserved for Phase 2.",
         }

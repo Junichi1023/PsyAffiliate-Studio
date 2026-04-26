@@ -43,11 +43,13 @@ export function DraftCard({
   onStatusChange,
   onScheduleChange,
   onDelete,
+  onMockPublish,
 }: {
   draft: Draft;
   onStatusChange: (status: DraftStatus) => void;
   onScheduleChange: (value: string) => void;
   onDelete: () => void;
+  onMockPublish?: () => void;
 }) {
   return (
     <article className="draft-card">
@@ -56,7 +58,10 @@ export function DraftCard({
           <span className="badge">{draft.platform}</span>
           <h3>{draft.theme}</h3>
         </div>
-        <span className={scoreClass(draft.compliance_score)}>{draft.compliance_score ?? "-"}</span>
+        <div className="score-stack">
+          <span className={scoreClass(draft.compliance_score)}>C {draft.compliance_score ?? "-"}</span>
+          <span className={scoreClass(draft.empathy_score)}>E {draft.empathy_score ?? "-"}</span>
+        </div>
       </div>
       <p>{draft.body}</p>
       {draft.caption && <p className="caption-text">{draft.caption}</p>}
@@ -68,6 +73,19 @@ export function DraftCard({
           ))}
         </div>
       )}
+      {riskLines(draft.empathy_notes).length > 0 && (
+        <div className="note-list empathy-notes">
+          {riskLines(draft.empathy_notes).map((note) => (
+            <span key={note}>{note}</span>
+          ))}
+        </div>
+      )}
+      <div className="publish-state">
+        <span className={draft.publish_ready ? "badge green" : "badge muted-badge"}>
+          {draft.publish_ready ? "publish ready" : "blocked"}
+        </span>
+        {!draft.publish_ready && draft.publish_block_reason && <span className="muted">{draft.publish_block_reason}</span>}
+      </div>
       <div className="draft-controls">
         <select value={draft.status} onChange={(event) => onStatusChange(event.target.value as DraftStatus)}>
           {statusOptions.map((status) => (
@@ -82,6 +100,11 @@ export function DraftCard({
           onChange={(event) => onScheduleChange(event.target.value)}
         />
         <span className="muted">{formatDate(draft.created_at)}</span>
+        {onMockPublish && (
+          <button className="mock-publish-button" title="mock publish" disabled={!draft.publish_ready} onClick={onMockPublish}>
+            投稿
+          </button>
+        )}
         <button title="削除" onClick={onDelete}>
           <Trash2 size={16} />
         </button>

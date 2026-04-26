@@ -6,7 +6,18 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import init_db
-from .routers import affiliate_products, content, dashboard, drafts, health, knowledge, settings
+from .routers import (
+    affiliate_products,
+    content,
+    dashboard,
+    drafts,
+    fortune_templates,
+    health,
+    knowledge,
+    persona_pains,
+    publish,
+    settings,
+)
 
 
 @asynccontextmanager
@@ -29,8 +40,11 @@ def create_app() -> FastAPI:
     app.include_router(dashboard.router)
     app.include_router(knowledge.router)
     app.include_router(affiliate_products.router)
+    app.include_router(persona_pains.router)
+    app.include_router(fortune_templates.router)
     app.include_router(content.router)
     app.include_router(drafts.router)
+    app.include_router(publish.router)
     app.include_router(settings.router)
     return app
 

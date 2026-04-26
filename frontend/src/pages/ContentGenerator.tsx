@@ -1,11 +1,23 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Save, ShieldCheck, Sparkles } from "lucide-react";
 import { api } from "../api/client";
-import { AffiliateProduct, DraftStatus, GeneratedContent, GenerateContentRequest, Platform, Tone } from "../types";
+import {
+  AffiliateIntent,
+  AffiliateProduct,
+  DraftStatus,
+  FortuneTemplate,
+  GeneratedContent,
+  GenerateContentRequest,
+  PersonaPain,
+  Platform,
+  Tone,
+} from "../types";
 import { EmptyState, scoreClass } from "./shared";
 
 export default function ContentGenerator() {
   const [products, setProducts] = useState<AffiliateProduct[]>([]);
+  const [personas, setPersonas] = useState<PersonaPain[]>([]);
+  const [templates, setTemplates] = useState<FortuneTemplate[]>([]);
   const [generated, setGenerated] = useState<GeneratedContent | null>(null);
   const [generating, setGenerating] = useState(false);
   const [form, setForm] = useState<GenerateContentRequest>({
@@ -14,10 +26,16 @@ export default function ContentGenerator() {
     platform: "threads",
     tone: "empathy",
     selected_product_id: null,
+    fortune_type: "tarot",
+    persona_pain_id: null,
+    fortune_template_id: null,
+    affiliate_intent: "none",
   });
 
   useEffect(() => {
     api.listProducts().then(setProducts);
+    api.listPersonaPains().then(setPersonas);
+    api.listFortuneTemplates().then(setTemplates);
     api.getSettings().then((settings) => setForm((current) => ({ ...current, platform: settings.default_platform })));
   }, []);
 
@@ -45,6 +63,12 @@ export default function ContentGenerator() {
       affiliate_product_id: generated.affiliate_product_id ?? null,
       compliance_score: generated.compliance_score,
       risk_notes: generated.risk_notes.join("\n"),
+      fortune_type: form.fortune_type ?? null,
+      persona_pain_id: form.persona_pain_id ?? null,
+      fortune_template_id: form.fortune_template_id ?? null,
+      affiliate_intent: form.affiliate_intent ?? "none",
+      empathy_score: generated.empathy_score ?? null,
+      empathy_notes: generated.empathy_notes.join("\n"),
       status,
       scheduled_at: null,
       posted_at: null,
@@ -100,6 +124,57 @@ export default function ContentGenerator() {
             ))}
           </select>
         </label>
+        <div className="two-columns">
+          <label>
+            fortune_type
+            <select value={form.fortune_type ?? ""} onChange={(event) => setForm({ ...form, fortune_type: event.target.value })}>
+              <option value="tarot">tarot</option>
+              <option value="astrology">astrology</option>
+              <option value="numerology">numerology</option>
+              <option value="oracle">oracle</option>
+              <option value="money_luck">money_luck</option>
+              <option value="love_luck">love_luck</option>
+              <option value="work_luck">work_luck</option>
+              <option value="general">general</option>
+            </select>
+          </label>
+          <label>
+            affiliate_intent
+            <select value={form.affiliate_intent ?? "none"} onChange={(event) => setForm({ ...form, affiliate_intent: event.target.value as AffiliateIntent })}>
+              <option value="none">none</option>
+              <option value="soft">soft</option>
+              <option value="moderate">moderate</option>
+            </select>
+          </label>
+        </div>
+        <label>
+          persona_pain
+          <select
+            value={form.persona_pain_id ?? ""}
+            onChange={(event) => setForm({ ...form, persona_pain_id: event.target.value ? Number(event.target.value) : null })}
+          >
+            <option value="">なし</option>
+            {personas.map((persona) => (
+              <option key={persona.id} value={persona.id}>
+                {persona.name} / {persona.category}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          fortune_template
+          <select
+            value={form.fortune_template_id ?? ""}
+            onChange={(event) => setForm({ ...form, fortune_template_id: event.target.value ? Number(event.target.value) : null })}
+          >
+            <option value="">なし</option>
+            {templates.map((template) => (
+              <option key={template.id} value={template.id}>
+                {template.name}
+              </option>
+            ))}
+          </select>
+        </label>
         <button className="primary" type="submit" disabled={generating}>
           <Sparkles size={17} />
           {generating ? "生成中" : "生成"}
@@ -116,6 +191,7 @@ export default function ContentGenerator() {
             <div className="result-meta">
               <span className="badge">{generated.platform}</span>
               <span className={scoreClass(generated.compliance_score)}>{generated.compliance_score}</span>
+              <span className={scoreClass(generated.empathy_score)}>{generated.empathy_score ?? "-"}</span>
               <span className="badge green">{generated.pr_disclosure}</span>
             </div>
             <h3>{generated.theme}</h3>
@@ -130,6 +206,11 @@ export default function ContentGenerator() {
             <p>{generated.cta}</p>
             <div className="note-list">
               {generated.risk_notes.map((note) => (
+                <span key={note}>{note}</span>
+              ))}
+            </div>
+            <div className="note-list empathy-notes">
+              {generated.empathy_notes.map((note) => (
                 <span key={note}>{note}</span>
               ))}
             </div>

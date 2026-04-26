@@ -4,7 +4,30 @@ import { api } from "../api/client";
 import { KnowledgeItem, KnowledgePayload } from "../types";
 import { EmptyState } from "./shared";
 
-const categories = ["profile", "brand_voice", "psychology", "ai_prompt", "prohibited_expression", "past_post", "note_article"];
+const categories = [
+  "profile",
+  "brand_voice",
+  "psychology",
+  "ai_prompt",
+  "prohibited_expression",
+  "past_post",
+  "note_article",
+  "fortune_telling_method",
+  "tarot_reading",
+  "astrology",
+  "numerology",
+  "oracle_card",
+  "money_luck",
+  "love_luck",
+  "work_luck",
+  "relationship_worry",
+  "spiritual_expression",
+  "fortune_disclaimer",
+  "affiliate_offer",
+  "cta_template",
+  "persona_pain",
+  "threads_hook",
+];
 const emptyForm: KnowledgePayload = { title: "", category: "psychology", content: "", source: "" };
 
 export default function Knowledge() {

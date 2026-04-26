@@ -1,10 +1,12 @@
-import { BarChart3, BookOpen, FileText, Package, Settings, Sparkles } from "lucide-react";
+import { BarChart3, BookOpen, FileText, LayoutTemplate, Package, Settings, Sparkles, Users } from "lucide-react";
 import { Page } from "../types";
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3 },
   { id: "knowledge", label: "Knowledge", icon: BookOpen },
   { id: "products", label: "Products", icon: Package },
+  { id: "persona-pains", label: "Persona Pains", icon: Users },
+  { id: "fortune-templates", label: "Fortune Templates", icon: LayoutTemplate },
   { id: "generator", label: "Generator", icon: Sparkles },
   { id: "drafts", label: "Drafts", icon: FileText },
   { id: "settings", label: "Settings", icon: Settings },

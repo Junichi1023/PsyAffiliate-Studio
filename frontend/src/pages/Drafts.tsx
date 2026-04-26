@@ -41,6 +41,10 @@ export default function Drafts() {
               await api.deleteDraft(draft.id);
               await load();
             }}
+            onMockPublish={async () => {
+              await api.mockPublishDraft(draft.id);
+              await load();
+            }}
           />
         ))}
         {drafts.length === 0 && <EmptyState label="下書きはまだありません。" />}

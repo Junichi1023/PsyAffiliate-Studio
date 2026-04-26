@@ -25,6 +25,8 @@ OUTPUT_SCHEMA: dict[str, Any] = {
         "affiliate_product_id": {"type": ["integer", "null"]},
         "compliance_score": {"type": "integer", "minimum": 0, "maximum": 100},
         "risk_notes": {"type": "array", "items": {"type": "string"}},
+        "empathy_score": {"type": ["integer", "null"], "minimum": 0, "maximum": 100},
+        "empathy_notes": {"type": "array", "items": {"type": "string"}},
         "suggested_hashtags": {"type": "array", "items": {"type": "string"}},
     },
     "required": [
@@ -37,6 +39,8 @@ OUTPUT_SCHEMA: dict[str, Any] = {
         "affiliate_product_id",
         "compliance_score",
         "risk_notes",
+        "empathy_score",
+        "empathy_notes",
         "suggested_hashtags",
     ],
 }
@@ -77,6 +81,8 @@ def _fallback_generation(
         "affiliate_product_id": product["id"] if product else None,
         "compliance_score": 90,
         "risk_notes": ["モック生成", "PR表記あり", reason],
+        "empathy_score": 82,
+        "empathy_notes": ["読者の不安を受け止めるモック生成です。", "今日できる小さな行動提案を含めています。"],
         "suggested_hashtags": ["#AI活用", "#心理学", "#PR"],
     }
 
@@ -128,6 +134,16 @@ def generate_content(request: GenerateContentRequest) -> dict[str, Any]:
         prohibited_claims=product.get("prohibited_claims") if product else None,
     )
     generated["compliance_score"] = int(compliance["compliance_score"])
+    from ..empathy import check_empathy
+
+    empathy = check_empathy(
+        body=generated.get("body", ""),
+        caption=generated.get("caption"),
+        target_reader=request.target_reader,
+        persona_pain_id=request.persona_pain_id,
+    )
+    generated["empathy_score"] = int(empathy["empathy_score"])
+    generated["empathy_notes"] = list(empathy["notes"])
     merged_notes = list(generated.get("risk_notes") or [])
     for note in compliance["risk_notes"]:
         if note not in merged_notes:

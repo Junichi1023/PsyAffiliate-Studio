@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 Platform = Literal["threads", "instagram", "both"]
 Tone = Literal["empathy", "practical", "story", "educational", "soft_sales"]
 DraftStatus = Literal["draft", "needs_review", "approved", "scheduled", "posted", "failed"]
+AffiliateIntent = Literal["none", "soft", "moderate"]
 
 
 class KnowledgeBase(BaseModel):
@@ -72,12 +73,74 @@ class AffiliateProduct(AffiliateProductBase):
     updated_at: str | None = None
 
 
+class PersonaPainBase(BaseModel):
+    name: str = Field(min_length=1)
+    category: str = Field(min_length=1)
+    pain_summary: str = Field(min_length=1)
+    emotional_state: str | None = None
+    desired_future: str | None = None
+    forbidden_approach: str | None = None
+    recommended_tone: str | None = None
+
+
+class PersonaPainCreate(PersonaPainBase):
+    pass
+
+
+class PersonaPainUpdate(BaseModel):
+    name: str | None = None
+    category: str | None = None
+    pain_summary: str | None = None
+    emotional_state: str | None = None
+    desired_future: str | None = None
+    forbidden_approach: str | None = None
+    recommended_tone: str | None = None
+
+
+class PersonaPain(PersonaPainBase):
+    id: int
+    created_at: str | None = None
+    updated_at: str | None = None
+
+
+class FortuneTemplateBase(BaseModel):
+    name: str = Field(min_length=1)
+    fortune_type: str = Field(min_length=1)
+    target_pain_category: str | None = None
+    structure: str = Field(min_length=1)
+    example_output: str | None = None
+    prohibited_patterns: str | None = None
+
+
+class FortuneTemplateCreate(FortuneTemplateBase):
+    pass
+
+
+class FortuneTemplateUpdate(BaseModel):
+    name: str | None = None
+    fortune_type: str | None = None
+    target_pain_category: str | None = None
+    structure: str | None = None
+    example_output: str | None = None
+    prohibited_patterns: str | None = None
+
+
+class FortuneTemplate(FortuneTemplateBase):
+    id: int
+    created_at: str | None = None
+    updated_at: str | None = None
+
+
 class GenerateContentRequest(BaseModel):
     theme: str = Field(min_length=1)
     target_reader: str = Field(min_length=1)
     platform: Platform
     tone: Tone
     selected_product_id: int | None = None
+    fortune_type: str | None = None
+    persona_pain_id: int | None = None
+    fortune_template_id: int | None = None
+    affiliate_intent: AffiliateIntent = "none"
 
 
 class GeneratedContent(BaseModel):
@@ -90,6 +153,8 @@ class GeneratedContent(BaseModel):
     affiliate_product_id: int | None = None
     compliance_score: int
     risk_notes: list[str]
+    empathy_score: int | None = None
+    empathy_notes: list[str] = []
     suggested_hashtags: list[str]
 
 
@@ -111,6 +176,21 @@ class ComplianceCheckResult(BaseModel):
     recommendation: str
 
 
+class EmpathyCheckRequest(BaseModel):
+    body: str = ""
+    caption: str | None = None
+    target_reader: str | None = None
+    persona_pain_id: int | None = None
+
+
+class EmpathyCheckResult(BaseModel):
+    empathy_score: int
+    risk_level: str
+    checks: dict[str, bool]
+    notes: list[str]
+    suggested_fix: str
+
+
 class DraftBase(BaseModel):
     platform: Platform
     theme: str = Field(min_length=1)
@@ -123,6 +203,14 @@ class DraftBase(BaseModel):
     status: DraftStatus = "draft"
     scheduled_at: str | None = None
     posted_at: str | None = None
+    fortune_type: str | None = None
+    persona_pain_id: int | None = None
+    fortune_template_id: int | None = None
+    affiliate_intent: AffiliateIntent | None = "none"
+    empathy_score: int | None = None
+    empathy_notes: str | None = None
+    publish_ready: bool = False
+    publish_block_reason: str | None = None
 
 
 class DraftCreate(DraftBase):
@@ -141,6 +229,14 @@ class DraftUpdate(BaseModel):
     status: DraftStatus | None = None
     scheduled_at: str | None = None
     posted_at: str | None = None
+    fortune_type: str | None = None
+    persona_pain_id: int | None = None
+    fortune_template_id: int | None = None
+    affiliate_intent: AffiliateIntent | None = None
+    empathy_score: int | None = None
+    empathy_notes: str | None = None
+    publish_ready: bool | None = None
+    publish_block_reason: str | None = None
 
 
 class Draft(DraftBase):
@@ -173,3 +269,10 @@ class AppSettingsUpdate(BaseModel):
     default_platform: Platform | None = None
     default_pr_disclosure: str | None = None
     brand_voice_summary: str | None = None
+
+
+class PublishResult(BaseModel):
+    ok: bool
+    draft_id: int
+    provider_results: list[dict]
+    message: str

@@ -26,7 +26,21 @@ def _normalize_product(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _normalize_draft(row: dict[str, Any]) -> dict[str, Any]:
+    row["publish_ready"] = bool(row.get("publish_ready"))
     return row
+
+
+def _publish_evaluation(data: dict[str, Any]) -> tuple[int, str | None]:
+    reasons: list[str] = []
+    if data.get("status") != "approved":
+        reasons.append("status must be approved")
+    if (data.get("compliance_score") or 0) < 90:
+        reasons.append("compliance_score must be 90 or higher")
+    if (data.get("empathy_score") or 0) < 75:
+        reasons.append("empathy_score must be 75 or higher")
+    if reasons:
+        return 0, "; ".join(reasons)
+    return 1, None
 
 
 def list_knowledge() -> list[dict[str, Any]]:
@@ -147,6 +161,125 @@ def delete_product(product_id: int) -> None:
         connection.execute("DELETE FROM affiliate_products WHERE id = ?", (product_id,))
 
 
+def list_persona_pains() -> list[dict[str, Any]]:
+    with get_connection() as connection:
+        rows = connection.execute("SELECT * FROM persona_pains ORDER BY updated_at DESC, id DESC").fetchall()
+    return [dict(row) for row in rows]
+
+
+def get_persona_pain(persona_id: int) -> dict[str, Any]:
+    with get_connection() as connection:
+        row = connection.execute("SELECT * FROM persona_pains WHERE id = ?", (persona_id,)).fetchone()
+    persona = row_to_dict(row)
+    if not persona:
+        raise HTTPException(status_code=404, detail="Persona pain not found")
+    return persona
+
+
+def create_persona_pain(data: dict[str, Any]) -> dict[str, Any]:
+    now = utc_now()
+    with get_connection() as connection:
+        cursor = connection.execute(
+            """
+            INSERT INTO persona_pains (
+                name, category, pain_summary, emotional_state, desired_future,
+                forbidden_approach, recommended_tone, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                data["name"],
+                data["category"],
+                data["pain_summary"],
+                data.get("emotional_state"),
+                data.get("desired_future"),
+                data.get("forbidden_approach"),
+                data.get("recommended_tone"),
+                now,
+                now,
+            ),
+        )
+    return get_persona_pain(cursor.lastrowid)
+
+
+def update_persona_pain(persona_id: int, data: dict[str, Any]) -> dict[str, Any]:
+    get_persona_pain(persona_id)
+    updates = {key: value for key, value in data.items() if value is not None}
+    if not updates:
+        return get_persona_pain(persona_id)
+    updates["updated_at"] = utc_now()
+    set_clause = ", ".join(f"{key} = ?" for key in updates)
+    values = list(updates.values()) + [persona_id]
+    with get_connection() as connection:
+        connection.execute(f"UPDATE persona_pains SET {set_clause} WHERE id = ?", values)
+    return get_persona_pain(persona_id)
+
+
+def delete_persona_pain(persona_id: int) -> None:
+    get_persona_pain(persona_id)
+    with get_connection() as connection:
+        connection.execute("DELETE FROM persona_pains WHERE id = ?", (persona_id,))
+
+
+def list_fortune_templates() -> list[dict[str, Any]]:
+    with get_connection() as connection:
+        rows = connection.execute("SELECT * FROM fortune_templates ORDER BY updated_at DESC, id DESC").fetchall()
+    return [dict(row) for row in rows]
+
+
+def get_fortune_template(template_id: int) -> dict[str, Any]:
+    with get_connection() as connection:
+        row = connection.execute("SELECT * FROM fortune_templates WHERE id = ?", (template_id,)).fetchone()
+    template = row_to_dict(row)
+    if not template:
+        raise HTTPException(status_code=404, detail="Fortune template not found")
+    return template
+
+
+def create_fortune_template(data: dict[str, Any]) -> dict[str, Any]:
+    now = utc_now()
+    with get_connection() as connection:
+        cursor = connection.execute(
+            """
+            INSERT INTO fortune_templates (
+                name, fortune_type, target_pain_category, structure,
+                example_output, prohibited_patterns, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                data["name"],
+                data["fortune_type"],
+                data.get("target_pain_category"),
+                data["structure"],
+                data.get("example_output"),
+                data.get("prohibited_patterns"),
+                now,
+                now,
+            ),
+        )
+    return get_fortune_template(cursor.lastrowid)
+
+
+def update_fortune_template(template_id: int, data: dict[str, Any]) -> dict[str, Any]:
+    get_fortune_template(template_id)
+    updates = {key: value for key, value in data.items() if value is not None}
+    if not updates:
+        return get_fortune_template(template_id)
+    updates["updated_at"] = utc_now()
+    set_clause = ", ".join(f"{key} = ?" for key in updates)
+    values = list(updates.values()) + [template_id]
+    with get_connection() as connection:
+        connection.execute(f"UPDATE fortune_templates SET {set_clause} WHERE id = ?", values)
+    return get_fortune_template(template_id)
+
+
+def delete_fortune_template(template_id: int) -> None:
+    get_fortune_template(template_id)
+    with get_connection() as connection:
+        connection.execute("DELETE FROM fortune_templates WHERE id = ?", (template_id,))
+
+
 def list_drafts() -> list[dict[str, Any]]:
     with get_connection() as connection:
         rows = connection.execute(
@@ -166,15 +299,21 @@ def get_draft(draft_id: int) -> dict[str, Any]:
 
 def create_draft(data: dict[str, Any]) -> dict[str, Any]:
     now = utc_now()
+    data = dict(data)
+    publish_ready, block_reason = _publish_evaluation(data)
+    data["publish_ready"] = publish_ready
+    data["publish_block_reason"] = block_reason
     with get_connection() as connection:
         cursor = connection.execute(
             """
             INSERT INTO content_drafts (
                 platform, theme, body, caption, cta, affiliate_product_id,
                 compliance_score, risk_notes, status, scheduled_at, posted_at,
+                fortune_type, persona_pain_id, fortune_template_id, affiliate_intent,
+                empathy_score, empathy_notes, publish_ready, publish_block_reason,
                 created_at, updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 data["platform"],
@@ -188,6 +327,14 @@ def create_draft(data: dict[str, Any]) -> dict[str, Any]:
                 data.get("status", "draft"),
                 data.get("scheduled_at"),
                 data.get("posted_at"),
+                data.get("fortune_type"),
+                data.get("persona_pain_id"),
+                data.get("fortune_template_id"),
+                data.get("affiliate_intent") or "none",
+                data.get("empathy_score"),
+                data.get("empathy_notes"),
+                data.get("publish_ready", 0),
+                data.get("publish_block_reason"),
                 now,
                 now,
             ),
@@ -196,8 +343,12 @@ def create_draft(data: dict[str, Any]) -> dict[str, Any]:
 
 
 def update_draft(draft_id: int, data: dict[str, Any]) -> dict[str, Any]:
-    get_draft(draft_id)
+    current = get_draft(draft_id)
     updates = {key: value for key, value in data.items() if value is not None}
+    draft_for_evaluation = {**current, **updates}
+    publish_ready, block_reason = _publish_evaluation(draft_for_evaluation)
+    updates["publish_ready"] = publish_ready
+    updates["publish_block_reason"] = block_reason
     if not updates:
         return get_draft(draft_id)
     updates["updated_at"] = utc_now()
@@ -258,6 +409,14 @@ def drafts_to_csv() -> str:
         "status",
         "scheduled_at",
         "posted_at",
+        "fortune_type",
+        "persona_pain_id",
+        "fortune_template_id",
+        "affiliate_intent",
+        "empathy_score",
+        "empathy_notes",
+        "publish_ready",
+        "publish_block_reason",
         "created_at",
         "updated_at",
     ]
