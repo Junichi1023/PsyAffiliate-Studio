@@ -1,0 +1,21 @@
+{
+  "name": "psyaffiliate-studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Desktop OS for ethical psychology x AI affiliate content operations.",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "setup": "npm install && npm --prefix frontend install && python3 -m venv .venv && .venv/bin/pip install -r backend/requirements.txt",
+    "dev": "concurrently -k \"npm:dev:frontend\" \"npm:dev:electron\"",
+    "dev:frontend": "npm --prefix frontend run dev -- --host 127.0.0.1 --port 5173",
+    "dev:electron": "wait-on http://127.0.0.1:5173 && electron electron/main.cjs",
+    "dev:backend": ".venv/bin/python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --app-dir backend",
+    "test": "PYTHONPATH=backend .venv/bin/python -m pytest backend/tests",
+    "build": "npm --prefix frontend run build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "electron": "^41.3.0",
+    "wait-on": "^8.0.1"
+  }
+}
