@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from ..models import AppSettingsOut, AppSettingsUpdate
+from ..schemas import AppSettingsOut, AppSettingsUpdate
 from ..services.settings_service import settings_response, update_runtime_settings
 
 

@@ -9,17 +9,17 @@ from .config import get_db_path
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS knowledge_items (
-    id INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     category TEXT NOT NULL,
     content TEXT NOT NULL,
     source TEXT,
-    created_at TEXT,
-    updated_at TEXT
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS affiliate_products (
-    id INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     asp_name TEXT,
     affiliate_url TEXT NOT NULL,
@@ -31,12 +31,12 @@ CREATE TABLE IF NOT EXISTS affiliate_products (
     prohibited_claims TEXT,
     priority INTEGER DEFAULT 0,
     is_active INTEGER DEFAULT 1,
-    created_at TEXT,
-    updated_at TEXT
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS content_drafts (
-    id INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     platform TEXT NOT NULL,
     theme TEXT NOT NULL,
     body TEXT NOT NULL,
@@ -48,9 +48,15 @@ CREATE TABLE IF NOT EXISTS content_drafts (
     status TEXT DEFAULT 'draft',
     scheduled_at TEXT,
     posted_at TEXT,
-    created_at TEXT,
-    updated_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
     FOREIGN KEY (affiliate_product_id) REFERENCES affiliate_products(id)
+);
+
+CREATE TABLE IF NOT EXISTS app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT,
+    updated_at TEXT NOT NULL
 );
 """
 

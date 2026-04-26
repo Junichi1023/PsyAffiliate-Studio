@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from ..models import ComplianceCheckRequest, ComplianceCheckResult, GeneratedContent, GenerateContentRequest
-from ..services.compliance import check_compliance
-from ..services.content_generation import generate_content
+from ..schemas import ComplianceCheckRequest, ComplianceCheckResult, GeneratedContent, GenerateContentRequest
+from ..services.ai.openai_client import generate_content
+from ..services.compliance.checker import check_compliance
 
 
 router = APIRouter(prefix="/api/content", tags=["content"])

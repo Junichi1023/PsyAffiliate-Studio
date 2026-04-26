@@ -104,9 +104,10 @@ class ComplianceCheckRequest(BaseModel):
 class ComplianceCheckResult(BaseModel):
     compliance_score: int
     risk_level: str
+    risk_notes: list[str]
+    suggested_fix: str
     has_pr_disclosure: bool
     flagged_terms: list[str]
-    risk_notes: list[str]
     recommendation: str
 
 
@@ -149,8 +150,11 @@ class Draft(DraftBase):
 
 
 class DashboardStats(BaseModel):
-    today_drafts: int
+    knowledge_count: int
+    affiliate_product_count: int
+    draft_count: int
     pending_review: int
+    today_drafts: int
     active_products: int
     recent_drafts: list[Draft]
 

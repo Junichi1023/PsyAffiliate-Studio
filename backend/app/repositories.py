@@ -217,6 +217,9 @@ def delete_draft(draft_id: int) -> None:
 def dashboard_stats() -> dict[str, Any]:
     today_prefix = datetime.now(timezone.utc).date().isoformat()
     with get_connection() as connection:
+        knowledge_count = connection.execute("SELECT COUNT(*) FROM knowledge_items").fetchone()[0]
+        affiliate_product_count = connection.execute("SELECT COUNT(*) FROM affiliate_products").fetchone()[0]
+        draft_count = connection.execute("SELECT COUNT(*) FROM content_drafts").fetchone()[0]
         today_drafts = connection.execute(
             "SELECT COUNT(*) FROM content_drafts WHERE created_at LIKE ?", (f"{today_prefix}%",)
         ).fetchone()[0]
@@ -230,6 +233,9 @@ def dashboard_stats() -> dict[str, Any]:
             "SELECT * FROM content_drafts ORDER BY created_at DESC, id DESC LIMIT 5"
         ).fetchall()
     return {
+        "knowledge_count": knowledge_count,
+        "affiliate_product_count": affiliate_product_count,
+        "draft_count": draft_count,
         "today_drafts": today_drafts,
         "pending_review": pending_review,
         "active_products": active_products,
@@ -260,3 +266,27 @@ def drafts_to_csv() -> str:
     for draft in list_drafts():
         writer.writerow({field: draft.get(field) for field in fields})
     return output.getvalue()
+
+
+def get_setting(key: str) -> str | None:
+    with get_connection() as connection:
+        row = connection.execute("SELECT value FROM app_settings WHERE key = ?", (key,)).fetchone()
+    if row is None:
+        return None
+    return row["value"]
+
+
+def get_settings(keys: list[str]) -> dict[str, str | None]:
+    return {key: get_setting(key) for key in keys}
+
+
+def set_setting(key: str, value: str | None) -> None:
+    with get_connection() as connection:
+        connection.execute(
+            """
+            INSERT INTO app_settings (key, value, updated_at)
+            VALUES (?, ?, ?)
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+            """,
+            (key, value, utc_now()),
+        )

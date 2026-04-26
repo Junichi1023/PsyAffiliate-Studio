@@ -5,8 +5,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import content, dashboard, drafts, knowledge, products, settings
 from .database import init_db
+from .routers import affiliate_products, content, dashboard, drafts, health, knowledge, settings
 
 
 @asynccontextmanager
@@ -25,13 +25,10 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    @app.get("/api/health")
-    def health() -> dict[str, str]:
-        return {"status": "ok", "service": "PsyAffiliate Studio"}
-
+    app.include_router(health.router)
     app.include_router(dashboard.router)
     app.include_router(knowledge.router)
-    app.include_router(products.router)
+    app.include_router(affiliate_products.router)
     app.include_router(content.router)
     app.include_router(drafts.router)
     app.include_router(settings.router)

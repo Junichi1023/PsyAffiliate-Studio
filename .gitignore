@@ -3,7 +3,10 @@
 .venv/
 node_modules/
 frontend/node_modules/
+dist/
+build/
 frontend/dist/
+*.db
 data/*.sqlite3
 data/*.sqlite3-*
 data/settings.json

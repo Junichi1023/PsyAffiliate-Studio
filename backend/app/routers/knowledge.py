@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Response
 
-from ..models import KnowledgeCreate, KnowledgeItem, KnowledgeUpdate
 from ..repositories import create_knowledge, delete_knowledge, get_knowledge, list_knowledge, update_knowledge
+from ..schemas import KnowledgeCreate, KnowledgeItem, KnowledgeUpdate
 
 
 router = APIRouter(prefix="/api/knowledge", tags=["knowledge"])

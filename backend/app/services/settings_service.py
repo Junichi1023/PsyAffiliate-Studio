@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import json
 import os
 from dataclasses import dataclass
 from typing import Any
 
-from ..config import get_openai_api_key, get_openai_model, get_settings_path
+from ..config import get_openai_api_key, get_openai_model
+from ..repositories import get_setting, set_setting
 
 
 _runtime_openai_api_key: str | None = None
@@ -20,22 +20,14 @@ class RuntimeSettings:
 
 
 def _read_saved_settings() -> dict[str, Any]:
-    path = get_settings_path()
-    if not path.exists():
-        return {}
-    try:
-        with path.open("r", encoding="utf-8") as file:
-            return json.load(file)
-    except (json.JSONDecodeError, OSError):
-        return {}
+    keys = ["openai_model", "default_platform", "default_pr_disclosure", "brand_voice_summary"]
+    return {key: get_setting(key) for key in keys}
 
 
 def _write_saved_settings(settings: dict[str, Any]) -> None:
-    path = get_settings_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    safe_settings = {key: value for key, value in settings.items() if key != "openai_api_key"}
-    with path.open("w", encoding="utf-8") as file:
-        json.dump(safe_settings, file, ensure_ascii=False, indent=2)
+    for key, value in settings.items():
+        if key != "openai_api_key":
+            set_setting(key, value)
 
 
 def get_runtime_settings() -> RuntimeSettings:
@@ -49,7 +41,7 @@ def get_runtime_settings() -> RuntimeSettings:
 
 
 def get_effective_openai_api_key() -> str | None:
-    return _runtime_openai_api_key or get_openai_api_key()
+    return _runtime_openai_api_key or get_openai_api_key() or get_setting("openai_api_key")
 
 
 def is_openai_api_key_set() -> bool:
@@ -61,6 +53,7 @@ def update_runtime_settings(payload: dict[str, Any]) -> dict[str, Any]:
 
     if payload.get("openai_api_key"):
         _runtime_openai_api_key = payload["openai_api_key"]
+        set_setting("openai_api_key", payload["openai_api_key"])
 
     current = _read_saved_settings()
     for key in ("openai_model", "default_platform", "default_pr_disclosure", "brand_voice_summary"):

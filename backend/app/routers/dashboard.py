@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from ..models import DashboardStats
 from ..repositories import dashboard_stats
+from ..schemas import DashboardStats
 
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])

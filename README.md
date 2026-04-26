@@ -1,35 +1,49 @@
 # PsyAffiliate Studio
 
-心理学 × AI × アフィリエイト投稿を、企画・生成・審査・保存するためのデスクトップアプリです。
+PsyAffiliate Studio は、Threads・Instagram向けに「心理学 × AI × アフィリエイト」投稿を企画、生成、審査、保存するためのデスクトップMVPです。
 
-Phase 1 では、人間の承認を前提にした下書き管理までを実装しています。Threads API / Instagram Graph API への投稿はモックの service 層だけを用意しています。
+読者を騙してリンクを踏ませる設計ではなく、読者の悩みに合う情報を提供し、PRを明示したうえで、必要な人だけが納得してクリックできる健全なSNSアフィリエイト運用を支援します。
 
-## 実装済み
+## 技術スタック
 
-- Electron で起動できるデスクトップ構成
-- FastAPI バックエンド
-- React / TypeScript / Vite フロントエンド
-- SQLite DB 初期化
-- ナレッジ CRUD
-- アフィリエイト商品 CRUD
-- OpenAI Responses API を使う投稿生成 service
-- `OPENAI_API_KEY` 未設定時の安全なテンプレート生成フォールバック
-- PR 表記・危険表現・医療的断定・収益保証・禁止訴求チェック
-- 投稿下書き保存、一覧、削除
-- 投稿ステータス管理
-- CSV エクスポート
-- Settings 画面
-- Phase 2 用 SNS service インターフェース
-- 最低限の API テスト
+- Frontend: React, TypeScript, Vite
+- Desktop: Electron
+- Backend: Python, FastAPI
+- Database: SQLite
+- AI: OpenAI Responses API, `gpt-5.5`
+- Search: Phase 1 は `knowledge_items` の `LIKE` 検索
+- SNS: Phase 1 は Threads / Instagram 投稿サービスのモック
 
-## 未実装
+## ディレクトリ構成
 
-- Threads API への実投稿
-- Instagram Graph API への実投稿
-- 予約投稿ワーカー
-- 投稿後の分析取得
-- OS Keychain での API キー保存
-- ChromaDB / LanceDB などの本格ベクトル検索
+```text
+PsyAffiliate-Studio/
+  backend/
+    app/
+      main.py
+      database.py
+      models.py
+      schemas.py
+      config.py
+      routers/
+      services/
+        ai/
+        compliance/
+        knowledge/
+        social/
+        export/
+    tests/
+  frontend/
+    src/
+      api/
+      components/
+      pages/
+      types/
+      styles/
+  electron/
+    main.js
+    package.json
+```
 
 ## セットアップ
 
@@ -39,28 +53,50 @@ cp .env.example .env
 npm run setup
 ```
 
-`.env` の `OPENAI_API_KEY` に本物のキーを設定すると、投稿生成で OpenAI Responses API を使います。キーが空の場合は、開発用のテンプレート生成に切り替わります。
+`.env` には本物のAPIキーをコミットしないでください。`OPENAI_API_KEY` が未設定でも、アプリはモック投稿を返して動作します。
 
-## 起動
-
-```bash
-npm run dev
+```env
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-5.5
+PSYAFFILIATE_DB_PATH=./data/psyaffiliate.sqlite3
+VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
 
-このコマンドで Vite と Electron を起動します。Electron はバックエンドの `127.0.0.1:8000` が空いていれば FastAPI も起動します。
-
-デスクトップから起動する場合は、`PsyAffiliate Studio.command` をダブルクリックします。
-
-バックエンドだけを起動する場合:
+## Backend起動
 
 ```bash
 npm run dev:backend
 ```
 
-フロントエンドだけを起動する場合:
+API:
+
+- `GET /api/health`
+- `GET/POST/PUT/DELETE /api/knowledge`
+- `GET/POST/PUT/DELETE /api/affiliate-products`
+- `POST /api/content/generate`
+- `POST /api/content/compliance-check`
+- `GET/POST/PUT/DELETE /api/drafts`
+- `GET /api/drafts/export.csv`
+- `GET/PUT /api/settings`
+
+## Frontend起動
 
 ```bash
 npm run dev:frontend
+```
+
+## Electron起動
+
+```bash
+npm run dev
+```
+
+Electron は Vite dev server を開きます。`127.0.0.1:8000` が空いていれば FastAPI も Electron 側から起動します。
+
+デスクトップから起動する場合:
+
+```text
+/Users/user/Desktop/PsyAffiliate Studio.app
 ```
 
 ## テスト
@@ -69,49 +105,43 @@ npm run dev:frontend
 npm run test
 ```
 
-確認している内容:
+確認項目:
 
 - `/api/health`
 - knowledge CRUD
 - affiliate_products CRUD
-- dangerous terms の検出
-- PR 表記なしアフィリエイト投稿の警告
-- draft 保存
-- CSV エクスポート
+- dangerous terms 検出
+- PR表記なしアフィリエイト投稿の警告
+- draft保存
+- CSVエクスポート
 
-## API
+## Phase 1でできること
 
-- `GET /api/health`
-- `GET /api/dashboard`
-- `GET /api/knowledge`
-- `POST /api/knowledge`
-- `GET /api/knowledge/{id}`
-- `PUT /api/knowledge/{id}`
-- `DELETE /api/knowledge/{id}`
-- `GET /api/affiliate-products`
-- `POST /api/affiliate-products`
-- `GET /api/affiliate-products/{id}`
-- `PUT /api/affiliate-products/{id}`
-- `DELETE /api/affiliate-products/{id}`
-- `POST /api/content/generate`
-- `POST /api/content/compliance-check`
-- `POST /api/drafts`
-- `GET /api/drafts`
-- `GET /api/drafts/{id}`
-- `PUT /api/drafts/{id}`
-- `DELETE /api/drafts/{id}`
-- `GET /api/drafts/export.csv`
-- `GET /api/settings`
-- `PUT /api/settings`
+- ナレッジ登録・一覧・編集・削除
+- アフィリエイト商品登録・一覧・編集・削除
+- GPT-5.5 / OpenAI Responses APIを使った投稿生成
+- APIキー未設定時のモック投稿生成
+- PR / 危険表現 / 医療的断定 / 収益保証 / 禁止訴求チェック
+- 投稿下書き保存
+- 下書き一覧、ステータス管理、スケジュール日時入力
+- CSVエクスポート
+- Settings画面
 
-## Phase 2 候補
+## Phase 2でやること
 
-- `services/social/threads.py` に Threads API 投稿実装
-- `services/social/instagram.py` に Instagram Graph API 投稿実装
-- `approved` 以外は投稿不可にする予約投稿ワーカー
-- `scheduled_at` を監視するジョブランナー
-- 投稿結果の `posted_at` / external id 保存
-- Instagram 画像生成・カルーセル生成
-- 商品別クリック・CV・投稿効果の分析テーブル
-- ナレッジ検索を ChromaDB または LanceDB へ差し替え
-- API キーを OS Keychain 管理へ移行
+- Threads API 実投稿
+- Instagram Graph API 実投稿
+- `approved` ステータス必須の予約投稿ワーカー
+- 投稿結果の external id / `posted_at` 保存
+- クリック計測、収益分析
+- Instagramカルーセル画像生成
+- ChromaDB / LanceDB への検索差し替え
+- OpenAI API Key の OS Keychain 管理
+
+## 注意事項
+
+- 医療的断定は禁止です。「治る」「必ず改善」などは避けてください。
+- アフィリエイト投稿では `#PR` または「アフィリエイトリンクを含みます」を明記してください。
+- ステルスマーケティング規制に対応するため、広告・PRであることを隠さないでください。
+- 自動投稿はPhase 1では行いません。将来実装時も、人間が `approved` にした投稿だけを対象にしてください。
+- APIキーやアクセストークンをコードやGitHubにコミットしないでください。

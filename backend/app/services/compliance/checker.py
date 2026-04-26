@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from ..repositories import get_product
+from ...repositories import get_product
 
 
 DANGEROUS_TERMS = [
@@ -14,6 +14,8 @@ DANGEROUS_TERMS = [
     "薬に頼らない",
     "誰でも簡単に稼げる",
     "これだけで人生が変わる",
+    "放置すると手遅れ",
+    "今すぐ買わないと損",
 ]
 
 PR_PATTERNS = [
@@ -25,6 +27,14 @@ PR_PATTERNS = [
 ]
 
 MEDICAL_ASSERTION_TERMS = ["完治", "診断不要", "治療不要", "薬をやめられる", "病院に行かなくていい"]
+MEDICAL_AD_PATTERNS = [
+    r"うつ.{0,8}治る",
+    r"うつ.{0,8}改善",
+    r"不安障害.{0,8}治る",
+    r"不安障害.{0,8}改善",
+    r"適応障害.{0,8}治る",
+    r"パニック障害.{0,8}改善",
+]
 INCOME_GUARANTEE_TERMS = ["月収保証", "収益保証", "必ず稼げる", "損しない"]
 ANXIETY_PRESSURE_TERMS = ["今すぐやらないと手遅れ", "知らないと危険", "人生終了", "取り返しがつかない"]
 
@@ -55,6 +65,19 @@ def _recommendation(score: int) -> str:
     return "投稿を止め、内容を作り直してください。"
 
 
+def _suggested_fix(score: int, has_pr_disclosure: bool, flagged_terms: list[str]) -> str:
+    suggestions: list[str] = []
+    if flagged_terms:
+        suggestions.append("断定・保証・過度な不安訴求を、体験や選択肢を示す表現に弱めてください。")
+    if not has_pr_disclosure:
+        suggestions.append("#PR または「アフィリエイトリンクを含みます」を明記してください。")
+    if score < 40:
+        suggestions.append("投稿前提ではなく、構成から作り直してください。")
+    if not suggestions:
+        suggestions.append("現状の主要リスクは低いですが、公開前に人間が文脈を確認してください。")
+    return " ".join(suggestions)
+
+
 def check_compliance(
     body: str,
     caption: str | None = None,
@@ -78,6 +101,12 @@ def check_compliance(
             flagged_terms.append(term)
             risk_notes.append(f"医療的断定につながる表現「{term}」があります。")
             score -= 20
+
+    for pattern in MEDICAL_AD_PATTERNS:
+        if re.search(pattern, text):
+            flagged_terms.append(pattern)
+            risk_notes.append("医療広告的な効果断定に見える表現があります。")
+            score -= 22
 
     for term in INCOME_GUARANTEE_TERMS:
         if term in text:
@@ -126,5 +155,6 @@ def check_compliance(
         "has_pr_disclosure": has_pr_disclosure,
         "flagged_terms": sorted(set(flagged_terms)),
         "risk_notes": risk_notes,
+        "suggested_fix": _suggested_fix(final_score, has_pr_disclosure, flagged_terms),
         "recommendation": _recommendation(final_score),
     }

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..database import get_connection
+from ...database import get_connection
 
 
 def search_knowledge(query: str, limit: int = 8) -> list[dict[str, Any]]:

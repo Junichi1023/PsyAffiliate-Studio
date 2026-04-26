@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Response
 
-from ..models import AffiliateProduct, AffiliateProductCreate, AffiliateProductUpdate
 from ..repositories import create_product, delete_product, get_product, list_products, update_product
+from ..schemas import AffiliateProduct, AffiliateProductCreate, AffiliateProductUpdate
 
 
 router = APIRouter(prefix="/api/affiliate-products", tags=["affiliate-products"])

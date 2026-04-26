@@ -59,9 +59,10 @@ export interface GeneratedContent {
 export interface ComplianceCheckResult {
   compliance_score: number;
   risk_level: string;
+  risk_notes: string[];
+  suggested_fix: string;
   has_pr_disclosure: boolean;
   flagged_terms: string[];
-  risk_notes: string[];
   recommendation: string;
 }
 
@@ -85,8 +86,11 @@ export interface Draft {
 export type DraftPayload = Omit<Draft, "id" | "created_at" | "updated_at">;
 
 export interface DashboardStats {
-  today_drafts: number;
+  knowledge_count: number;
+  affiliate_product_count: number;
+  draft_count: number;
   pending_review: number;
+  today_drafts: number;
   active_products: number;
   recent_drafts: Draft[];
 }

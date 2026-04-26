@@ -3,8 +3,9 @@ from __future__ import annotations
 from fastapi import APIRouter, Response
 from fastapi.responses import StreamingResponse
 
-from ..models import Draft, DraftCreate, DraftUpdate
-from ..repositories import create_draft, delete_draft, drafts_to_csv, get_draft, list_drafts, update_draft
+from ..repositories import create_draft, delete_draft, get_draft, list_drafts, update_draft
+from ..schemas import Draft, DraftCreate, DraftUpdate
+from ..services.export.csv_exporter import export_drafts_csv
 
 
 router = APIRouter(prefix="/api/drafts", tags=["drafts"])
@@ -22,9 +23,8 @@ def list_items() -> list[dict]:
 
 @router.get("/export.csv")
 def export_csv() -> StreamingResponse:
-    csv_body = drafts_to_csv()
     return StreamingResponse(
-        iter([csv_body]),
+        iter([export_drafts_csv()]),
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": "attachment; filename=content_drafts.csv"},
     )
