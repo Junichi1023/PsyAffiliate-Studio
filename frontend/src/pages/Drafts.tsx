@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Download, FileText } from "lucide-react";
 import { API_BASE, api } from "../api/client";
+import { SCORE_HELP_TEXT } from "../constants/labels";
 import { Draft } from "../types";
 import { DraftCard, EmptyState } from "./shared";
 
@@ -18,11 +19,18 @@ export default function Drafts() {
   return (
     <section className="panel full-panel">
       <div className="panel-title">
-        <h3>投稿下書き</h3>
+        <h3>下書き・投稿管理</h3>
         <button className="secondary" onClick={() => window.open(`${API_BASE}/api/drafts/export.csv`, "_blank")}>
           <Download size={17} />
           CSV
         </button>
+      </div>
+      <p className="page-description">
+        生成した投稿の安全性、寄り添い度、承認状態、投稿準備状況を確認します。
+      </p>
+      <div className="score-explainers">
+        <p><strong>安全性スコア:</strong> {SCORE_HELP_TEXT.compliance}</p>
+        <p><strong>寄り添いスコア:</strong> {SCORE_HELP_TEXT.empathy}</p>
       </div>
       <div className="draft-list">
         {drafts.map((draft) => (

@@ -13,13 +13,13 @@ router = APIRouter(prefix="/api/publish", tags=["publish"])
 
 def _validate_publish_ready(draft: dict) -> None:
     if draft.get("status") != "approved":
-        raise HTTPException(status_code=400, detail="Draft status must be approved before mock publish")
+        raise HTTPException(status_code=400, detail="まだ承認済みではありません")
     if (draft.get("compliance_score") or 0) < 90:
-        raise HTTPException(status_code=400, detail="Compliance score must be 90 or higher")
+        raise HTTPException(status_code=400, detail="安全性スコアが90未満です")
     if (draft.get("empathy_score") or 0) < 75:
-        raise HTTPException(status_code=400, detail="Empathy score must be 75 or higher")
+        raise HTTPException(status_code=400, detail="寄り添いスコアが75未満です")
     if not draft.get("publish_ready"):
-        raise HTTPException(status_code=400, detail=draft.get("publish_block_reason") or "Draft is not publish ready")
+        raise HTTPException(status_code=400, detail=draft.get("publish_block_reason") or "投稿準備OKになっていません")
 
 
 @router.post("/drafts/{draft_id}/mock", response_model=PublishResult)
@@ -38,5 +38,5 @@ def mock_publish(draft_id: int) -> dict:
         "ok": True,
         "draft_id": draft_id,
         "provider_results": provider_results,
-        "message": "Mock publish completed. posted_at was not updated.",
+        "message": "mock投稿が完了しました。実投稿ではないため posted_at は更新していません。",
     }

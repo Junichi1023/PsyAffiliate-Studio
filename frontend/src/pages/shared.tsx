@@ -1,4 +1,12 @@
 import { FileText, Trash2 } from "lucide-react";
+import {
+  complianceStatus,
+  DRAFT_STATUS_LABELS,
+  empathyStatus,
+  mockPublishDisabledReason,
+  platformLabel,
+  publishReadyLabel,
+} from "../constants/labels";
 import { Draft, DraftStatus } from "../types";
 
 export const statusOptions: DraftStatus[] = ["draft", "needs_review", "approved", "scheduled", "posted", "failed"];
@@ -51,16 +59,21 @@ export function DraftCard({
   onDelete: () => void;
   onMockPublish?: () => void;
 }) {
+  const disabledReason = onMockPublish ? mockPublishDisabledReason(draft) : null;
   return (
     <article className="draft-card">
       <div className="draft-head">
         <div>
-          <span className="badge">{draft.platform}</span>
+          <span className="badge">{platformLabel(draft.platform)}</span>
           <h3>{draft.theme}</h3>
         </div>
         <div className="score-stack">
-          <span className={scoreClass(draft.compliance_score)}>C {draft.compliance_score ?? "-"}</span>
-          <span className={scoreClass(draft.empathy_score)}>E {draft.empathy_score ?? "-"}</span>
+          <span className={scoreClass(draft.compliance_score)}>
+            安全性 {draft.compliance_score ?? "-"} / {complianceStatus(draft.compliance_score)}
+          </span>
+          <span className={scoreClass(draft.empathy_score)}>
+            寄り添い {draft.empathy_score ?? "-"} / {empathyStatus(draft.empathy_score)}
+          </span>
         </div>
       </div>
       <p>{draft.body}</p>
@@ -82,15 +95,16 @@ export function DraftCard({
       )}
       <div className="publish-state">
         <span className={draft.publish_ready ? "badge green" : "badge muted-badge"}>
-          {draft.publish_ready ? "publish ready" : "blocked"}
+          {publishReadyLabel(draft.publish_ready)}
         </span>
-        {!draft.publish_ready && draft.publish_block_reason && <span className="muted">{draft.publish_block_reason}</span>}
+        {disabledReason && <span className="muted">{disabledReason}</span>}
+        {!disabledReason && !draft.publish_ready && draft.publish_block_reason && <span className="muted">{draft.publish_block_reason}</span>}
       </div>
       <div className="draft-controls">
         <select value={draft.status} onChange={(event) => onStatusChange(event.target.value as DraftStatus)}>
           {statusOptions.map((status) => (
             <option key={status} value={status}>
-              {status}
+              {DRAFT_STATUS_LABELS[status]}
             </option>
           ))}
         </select>
@@ -101,8 +115,8 @@ export function DraftCard({
         />
         <span className="muted">{formatDate(draft.created_at)}</span>
         {onMockPublish && (
-          <button className="mock-publish-button" title="mock publish" disabled={!draft.publish_ready} onClick={onMockPublish}>
-            投稿
+          <button className="mock-publish-button" title={disabledReason ?? "mock投稿"} disabled={Boolean(disabledReason)} onClick={onMockPublish}>
+            mock投稿
           </button>
         )}
         <button title="削除" onClick={onDelete}>

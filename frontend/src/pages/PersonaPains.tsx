@@ -1,10 +1,11 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Pencil, Plus, Save, Trash2, Users, X } from "lucide-react";
 import { api } from "../api/client";
+import { genericLabel, PERSONA_CATEGORY_LABELS } from "../constants/labels";
 import { PersonaPain, PersonaPainPayload } from "../types";
 import { EmptyState } from "./shared";
 
-const categories = ["money", "love", "work", "relationship", "future", "self_confidence"];
+const categories = Object.entries(PERSONA_CATEGORY_LABELS);
 const emptyForm: PersonaPainPayload = {
   name: "",
   category: "money",
@@ -60,22 +61,25 @@ export default function PersonaPains() {
           <h3>{editingId ? "ペルソナ編集" : "悩みペルソナ登録"}</h3>
           <Users size={18} />
         </div>
+        <p className="page-description compact">
+          投稿の相手となる読者の悩みを登録します。占い投稿は、占術よりも“誰のどんな不安に寄り添うか”が重要です。
+        </p>
         <label>
-          名前
+          ペルソナ名
           <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required />
         </label>
         <label>
-          カテゴリ
+          悩みカテゴリ
           <select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category}
+            {categories.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
               </option>
             ))}
           </select>
         </label>
         <label>
-          悩みの概要
+          悩みの要約
           <textarea rows={4} value={form.pain_summary} onChange={(event) => setForm({ ...form, pain_summary: event.target.value })} required />
         </label>
         <label>
@@ -83,11 +87,11 @@ export default function PersonaPains() {
           <input value={form.emotional_state ?? ""} onChange={(event) => setForm({ ...form, emotional_state: event.target.value })} />
         </label>
         <label>
-          望む未来
+          望んでいる未来
           <input value={form.desired_future ?? ""} onChange={(event) => setForm({ ...form, desired_future: event.target.value })} />
         </label>
         <label>
-          避ける接し方
+          避けるべき接し方
           <textarea rows={3} value={form.forbidden_approach ?? ""} onChange={(event) => setForm({ ...form, forbidden_approach: event.target.value })} />
         </label>
         <label>
@@ -113,7 +117,7 @@ export default function PersonaPains() {
           <article className="card" key={item.id}>
             <div className="card-header">
               <div>
-                <span className="badge">{item.category}</span>
+                <span className="badge">{genericLabel(PERSONA_CATEGORY_LABELS, item.category)}</span>
                 <h3>{item.name}</h3>
               </div>
               <div className="icon-actions">

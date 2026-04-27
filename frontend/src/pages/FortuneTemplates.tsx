@@ -1,10 +1,12 @@
 import { FormEvent, useEffect, useState } from "react";
 import { LayoutTemplate, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { api } from "../api/client";
+import { FORTUNE_TYPE_LABELS, genericLabel, PERSONA_CATEGORY_LABELS } from "../constants/labels";
 import { FortuneTemplate, FortuneTemplatePayload } from "../types";
 import { EmptyState } from "./shared";
 
-const fortuneTypes = ["tarot", "astrology", "numerology", "oracle", "money_luck", "love_luck", "work_luck", "general"];
+const fortuneTypes = Object.entries(FORTUNE_TYPE_LABELS);
+const personaCategories = Object.entries(PERSONA_CATEGORY_LABELS);
 const emptyForm: FortuneTemplatePayload = {
   name: "",
   fortune_type: "tarot",
@@ -58,32 +60,42 @@ export default function FortuneTemplates() {
           <h3>{editingId ? "テンプレート編集" : "占いテンプレート登録"}</h3>
           <LayoutTemplate size={18} />
         </div>
+        <p className="page-description compact">
+          金運、恋愛、仕事運など、投稿の型を登録します。断定予言ではなく、自己理解と小さな行動につながる構成にしてください。
+        </p>
         <label>
-          名前
+          テンプレート名
           <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required />
         </label>
         <div className="two-columns">
           <label>
-            fortune_type
+            占いタイプ
             <select value={form.fortune_type} onChange={(event) => setForm({ ...form, fortune_type: event.target.value })}>
-              {fortuneTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
+              {fortuneTypes.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
                 </option>
               ))}
             </select>
           </label>
           <label>
-            悩みカテゴリ
-            <input value={form.target_pain_category ?? ""} onChange={(event) => setForm({ ...form, target_pain_category: event.target.value })} />
+            対象の悩みカテゴリ
+            <select value={form.target_pain_category ?? ""} onChange={(event) => setForm({ ...form, target_pain_category: event.target.value })}>
+              <option value="">指定なし</option>
+              {personaCategories.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
         <label>
-          構成
+          投稿構成
           <textarea rows={8} value={form.structure} onChange={(event) => setForm({ ...form, structure: event.target.value })} required />
         </label>
         <label>
-          例文
+          出力例
           <textarea rows={4} value={form.example_output ?? ""} onChange={(event) => setForm({ ...form, example_output: event.target.value })} />
         </label>
         <label>
@@ -109,7 +121,7 @@ export default function FortuneTemplates() {
           <article className="card" key={item.id}>
             <div className="card-header">
               <div>
-                <span className="badge">{item.fortune_type}</span>
+                <span className="badge">{genericLabel(FORTUNE_TYPE_LABELS, item.fortune_type)}</span>
                 <h3>{item.name}</h3>
               </div>
               <div className="icon-actions">

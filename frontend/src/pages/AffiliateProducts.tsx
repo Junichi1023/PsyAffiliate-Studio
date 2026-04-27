@@ -67,13 +67,17 @@ export default function AffiliateProducts() {
           <h3>{editingId ? "商品編集" : "商品登録"}</h3>
           <Package size={18} />
         </div>
+        <p className="page-description compact">
+          紹介する商品・サービス、ASP、リンク、禁止訴求、悩みとの相性を管理します。
+          禁止訴求には、商品紹介で使ってはいけない表現を入力してください。例: 必ず稼げる、金運が上がる、治る、復縁できる
+        </p>
         <div className="two-columns">
           <label>
             商品名
             <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required />
           </label>
           <label>
-            ASP
+            ASP名
             <input value={form.asp_name ?? ""} onChange={(event) => setForm({ ...form, asp_name: event.target.value })} />
           </label>
         </div>
@@ -82,16 +86,16 @@ export default function AffiliateProducts() {
           <input value={form.affiliate_url} onChange={(event) => setForm({ ...form, affiliate_url: event.target.value })} required />
         </label>
         <label>
-          表示URL
+          表示用URL
           <input value={form.display_url ?? ""} onChange={(event) => setForm({ ...form, display_url: event.target.value })} />
         </label>
         <div className="two-columns">
           <label>
-            カテゴリ
+            商品カテゴリ
             <input value={form.category ?? ""} onChange={(event) => setForm({ ...form, category: event.target.value })} />
           </label>
           <label>
-            悩み
+            対応する悩み
             <input value={form.target_pain ?? ""} onChange={(event) => setForm({ ...form, target_pain: event.target.value })} />
           </label>
         </div>
@@ -120,7 +124,7 @@ export default function AffiliateProducts() {
           </label>
           <label className="checkbox-label">
             <input type="checkbox" checked={form.is_active} onChange={(event) => setForm({ ...form, is_active: event.target.checked })} />
-            active
+            有効
           </label>
         </div>
         <div className="button-row">
@@ -142,7 +146,7 @@ export default function AffiliateProducts() {
           <article className="card product-card" key={product.id}>
             <div className="card-header">
               <div>
-                <span className={product.is_active ? "badge green" : "badge muted-badge"}>{product.is_active ? "active" : "inactive"}</span>
+                <span className={product.is_active ? "badge green" : "badge muted-badge"}>{product.is_active ? "有効" : "無効"}</span>
                 <h3>{product.name}</h3>
               </div>
               <div className="icon-actions">
@@ -155,9 +159,9 @@ export default function AffiliateProducts() {
               </div>
             </div>
             <dl>
-              <div><dt>ASP</dt><dd>{product.asp_name || "-"}</dd></div>
-              <div><dt>カテゴリ</dt><dd>{product.category || "-"}</dd></div>
-              <div><dt>悩み</dt><dd>{product.target_pain || "-"}</dd></div>
+              <div><dt>ASP名</dt><dd>{product.asp_name || "-"}</dd></div>
+              <div><dt>商品カテゴリ</dt><dd>{product.category || "-"}</dd></div>
+              <div><dt>対応する悩み</dt><dd>{product.target_pain || "-"}</dd></div>
               <div><dt>優先度</dt><dd>{product.priority}</dd></div>
             </dl>
             <p className="url-text">{product.display_url || product.affiliate_url}</p>

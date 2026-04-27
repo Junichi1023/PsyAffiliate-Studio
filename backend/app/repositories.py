@@ -33,11 +33,11 @@ def _normalize_draft(row: dict[str, Any]) -> dict[str, Any]:
 def _publish_evaluation(data: dict[str, Any]) -> tuple[int, str | None]:
     reasons: list[str] = []
     if data.get("status") != "approved":
-        reasons.append("status must be approved")
+        reasons.append("まだ承認済みではありません")
     if (data.get("compliance_score") or 0) < 90:
-        reasons.append("compliance_score must be 90 or higher")
+        reasons.append("安全性スコアが90未満です")
     if (data.get("empathy_score") or 0) < 75:
-        reasons.append("empathy_score must be 75 or higher")
+        reasons.append("寄り添いスコアが75未満です")
     if reasons:
         return 0, "; ".join(reasons)
     return 1, None
@@ -370,12 +370,25 @@ def dashboard_stats() -> dict[str, Any]:
     with get_connection() as connection:
         knowledge_count = connection.execute("SELECT COUNT(*) FROM knowledge_items").fetchone()[0]
         affiliate_product_count = connection.execute("SELECT COUNT(*) FROM affiliate_products").fetchone()[0]
+        persona_pain_count = connection.execute("SELECT COUNT(*) FROM persona_pains").fetchone()[0]
+        fortune_template_count = connection.execute("SELECT COUNT(*) FROM fortune_templates").fetchone()[0]
         draft_count = connection.execute("SELECT COUNT(*) FROM content_drafts").fetchone()[0]
         today_drafts = connection.execute(
             "SELECT COUNT(*) FROM content_drafts WHERE created_at LIKE ?", (f"{today_prefix}%",)
         ).fetchone()[0]
         pending_review = connection.execute(
             "SELECT COUNT(*) FROM content_drafts WHERE status = 'needs_review'"
+        ).fetchone()[0]
+        publish_ready_count = connection.execute(
+            "SELECT COUNT(*) FROM content_drafts WHERE publish_ready = 1"
+        ).fetchone()[0]
+        risky_draft_count = connection.execute(
+            """
+            SELECT COUNT(*) FROM content_drafts
+            WHERE status = 'needs_review'
+               OR COALESCE(compliance_score, 0) < 70
+               OR COALESCE(empathy_score, 0) < 60
+            """
         ).fetchone()[0]
         active_products = connection.execute(
             "SELECT COUNT(*) FROM affiliate_products WHERE is_active = 1"
@@ -386,11 +399,15 @@ def dashboard_stats() -> dict[str, Any]:
     return {
         "knowledge_count": knowledge_count,
         "affiliate_product_count": affiliate_product_count,
+        "persona_pain_count": persona_pain_count,
+        "fortune_template_count": fortune_template_count,
         "draft_count": draft_count,
         "today_drafts": today_drafts,
         "pending_review": pending_review,
+        "publish_ready_count": publish_ready_count,
+        "risky_draft_count": risky_draft_count,
         "active_products": active_products,
-        "recent_drafts": [dict(row) for row in recent],
+        "recent_drafts": [_normalize_draft(dict(row)) for row in recent],
     }
 
 

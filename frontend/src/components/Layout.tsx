@@ -20,7 +20,7 @@ export default function Layout({
       <main className="workspace">
         <header className="topbar">
           <div>
-            <p className="eyebrow">Ethical SNS Affiliate OS</p>
+            <p className="eyebrow">悩みに寄り添う占い投稿・アフィリエイト運用OS</p>
             <h2>{pageLabel(page)}</h2>
           </div>
           {onRefresh && (

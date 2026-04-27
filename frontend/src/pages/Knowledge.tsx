@@ -1,33 +1,11 @@
 import { FormEvent, useEffect, useState } from "react";
 import { BookOpen, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { api } from "../api/client";
+import { genericLabel, KNOWLEDGE_CATEGORY_LABELS } from "../constants/labels";
 import { KnowledgeItem, KnowledgePayload } from "../types";
 import { EmptyState } from "./shared";
 
-const categories = [
-  "profile",
-  "brand_voice",
-  "psychology",
-  "ai_prompt",
-  "prohibited_expression",
-  "past_post",
-  "note_article",
-  "fortune_telling_method",
-  "tarot_reading",
-  "astrology",
-  "numerology",
-  "oracle_card",
-  "money_luck",
-  "love_luck",
-  "work_luck",
-  "relationship_worry",
-  "spiritual_expression",
-  "fortune_disclaimer",
-  "affiliate_offer",
-  "cta_template",
-  "persona_pain",
-  "threads_hook",
-];
+const categories = Object.entries(KNOWLEDGE_CATEGORY_LABELS);
 const emptyForm: KnowledgePayload = { title: "", category: "psychology", content: "", source: "" };
 
 export default function Knowledge() {
@@ -62,6 +40,10 @@ export default function Knowledge() {
           <h3>{editingId ? "ナレッジ編集" : "ナレッジ登録"}</h3>
           <BookOpen size={18} />
         </div>
+        <p className="page-description compact">
+          占いノウハウ、投稿の口調、禁止表現、過去の反応が良かった投稿などを登録します。
+          占いの知識だけでなく、読者の悩み、投稿の冒頭フック、商品紹介の言い回しもナレッジとして登録してください。
+        </p>
         <label>
           タイトル
           <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} required />
@@ -69,9 +51,9 @@ export default function Knowledge() {
         <label>
           カテゴリ
           <select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category}
+            {categories.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
               </option>
             ))}
           </select>
@@ -81,7 +63,7 @@ export default function Knowledge() {
           <textarea rows={8} value={form.content} onChange={(event) => setForm({ ...form, content: event.target.value })} required />
         </label>
         <label>
-          source
+          情報元
           <input value={form.source ?? ""} onChange={(event) => setForm({ ...form, source: event.target.value })} />
         </label>
         <div className="button-row">
@@ -103,7 +85,7 @@ export default function Knowledge() {
           <article className="card" key={item.id}>
             <div className="card-header">
               <div>
-                <span className="badge">{item.category}</span>
+                <span className="badge">{genericLabel(KNOWLEDGE_CATEGORY_LABELS, item.category)}</span>
                 <h3>{item.title}</h3>
               </div>
               <div className="icon-actions">

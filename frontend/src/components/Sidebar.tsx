@@ -1,19 +1,20 @@
 import { BarChart3, BookOpen, FileText, LayoutTemplate, Package, Settings, Sparkles, Users } from "lucide-react";
+import { PAGE_LABELS } from "../constants/labels";
 import { Page } from "../types";
 
 const navItems = [
-  { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-  { id: "knowledge", label: "Knowledge", icon: BookOpen },
-  { id: "products", label: "Products", icon: Package },
-  { id: "persona-pains", label: "Persona Pains", icon: Users },
-  { id: "fortune-templates", label: "Fortune Templates", icon: LayoutTemplate },
-  { id: "generator", label: "Generator", icon: Sparkles },
-  { id: "drafts", label: "Drafts", icon: FileText },
-  { id: "settings", label: "Settings", icon: Settings },
+  { id: "dashboard", label: PAGE_LABELS.dashboard, icon: BarChart3 },
+  { id: "knowledge", label: PAGE_LABELS.knowledge, icon: BookOpen },
+  { id: "products", label: PAGE_LABELS.products, icon: Package },
+  { id: "persona-pains", label: PAGE_LABELS["persona-pains"], icon: Users },
+  { id: "fortune-templates", label: PAGE_LABELS["fortune-templates"], icon: LayoutTemplate },
+  { id: "generator", label: PAGE_LABELS.generator, icon: Sparkles },
+  { id: "drafts", label: PAGE_LABELS.drafts, icon: FileText },
+  { id: "settings", label: PAGE_LABELS.settings, icon: Settings },
 ] as const;
 
 export function pageLabel(page: Page) {
-  return navItems.find((item) => item.id === page)?.label ?? "Dashboard";
+  return navItems.find((item) => item.id === page)?.label ?? PAGE_LABELS.dashboard;
 }
 
 export default function Sidebar({ page, onPageChange }: { page: Page; onPageChange: (page: Page) => void }) {
@@ -23,7 +24,7 @@ export default function Sidebar({ page, onPageChange }: { page: Page; onPageChan
         <div className="brand-mark">PS</div>
         <div>
           <h1>PsyAffiliate Studio</h1>
-          <span>Phase 1 MVP</span>
+          <span>占い × 心理学 × AI × アフィリエイト</span>
         </div>
       </div>
       <nav>

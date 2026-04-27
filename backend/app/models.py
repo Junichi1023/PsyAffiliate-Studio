@@ -248,8 +248,12 @@ class Draft(DraftBase):
 class DashboardStats(BaseModel):
     knowledge_count: int
     affiliate_product_count: int
+    persona_pain_count: int
+    fortune_template_count: int
     draft_count: int
     pending_review: int
+    publish_ready_count: int
+    risky_draft_count: int
     today_drafts: int
     active_products: int
     recent_drafts: list[Draft]

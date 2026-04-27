@@ -20,6 +20,7 @@ def test_fortune_templates_crud(client: TestClient):
     assert listed.status_code == 200
     assert any(item["name"] == payload["name"] for item in listed.json())
     assert any(item["name"] == "金運占い投稿テンプレート" for item in listed.json())
+    assert any(item["name"] == "金運の不安に寄り添う投稿" for item in listed.json())
 
     updated = client.put(f"/api/fortune-templates/{template_id}", json={"fortune_type": "general"})
     assert updated.status_code == 200

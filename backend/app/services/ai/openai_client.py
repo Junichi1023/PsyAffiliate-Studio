@@ -98,9 +98,10 @@ def generate_content(request: GenerateContentRequest) -> dict[str, Any]:
     context = build_generation_context(request, product)
     client = OpenAI(api_key=api_key)
     instructions = (
-        "あなたは心理学、AI活用、アフィリエイト倫理に詳しいSNS編集者です。"
+        "あなたは占い、心理学、AI活用、アフィリエイト倫理に詳しいSNS編集者です。"
         "Threads/Instagram向けの投稿案をJSONだけで返してください。"
-        "PR表記、医療的断定の回避、誇大表現の回避、読者への価値提供を必ず守ります。"
+        "占いは断定予言ではなく、自己理解と行動整理の補助として扱います。"
+        "PR表記、医療的断定の回避、誇大表現の回避、不安煽りと占い依存の回避、読者への価値提供を必ず守ります。"
     )
 
     try:

@@ -133,8 +133,12 @@ export type DraftPayload = Omit<Draft, "id" | "created_at" | "updated_at" | "pub
 export interface DashboardStats {
   knowledge_count: number;
   affiliate_product_count: number;
+  persona_pain_count: number;
+  fortune_template_count: number;
   draft_count: number;
   pending_review: number;
+  publish_ready_count: number;
+  risky_draft_count: number;
   today_drafts: number;
   active_products: number;
   recent_drafts: Draft[];

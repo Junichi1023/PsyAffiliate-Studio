@@ -24,18 +24,21 @@ def _create_draft(client: TestClient, **overrides):
 
 def test_non_approved_draft_cannot_mock_publish(client: TestClient):
     draft = _create_draft(client, status="draft")
+    assert draft["publish_ready"] is False
     response = client.post(f"/api/publish/drafts/{draft['id']}/mock")
     assert response.status_code == 400
 
 
 def test_low_compliance_draft_cannot_mock_publish(client: TestClient):
     draft = _create_draft(client, compliance_score=60)
+    assert draft["publish_ready"] is False
     response = client.post(f"/api/publish/drafts/{draft['id']}/mock")
     assert response.status_code == 400
 
 
 def test_low_empathy_draft_cannot_mock_publish(client: TestClient):
     draft = _create_draft(client, empathy_score=50)
+    assert draft["publish_ready"] is False
     response = client.post(f"/api/publish/drafts/{draft['id']}/mock")
     assert response.status_code == 400
 

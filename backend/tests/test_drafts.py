@@ -11,12 +11,15 @@ def test_draft_save_and_csv_export(client: TestClient):
         "caption": None,
         "cta": "プロフィールのリンクからどうぞ。",
         "compliance_score": 92,
+        "empathy_score": 80,
+        "empathy_notes": "寄り添い表現あり",
         "risk_notes": "PR表記あり",
         "status": "draft",
     }
     created = client.post("/api/drafts", json=payload)
     assert created.status_code == 201
     assert created.json()["theme"] == payload["theme"]
+    assert created.json()["empathy_score"] == 80
 
     listed = client.get("/api/drafts")
     assert listed.status_code == 200

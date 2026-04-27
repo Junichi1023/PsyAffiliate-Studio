@@ -99,6 +99,56 @@ CONTENT_DRAFT_EXTRA_COLUMNS = {
 
 FORTUNE_TEMPLATE_SEEDS = [
     {
+        "name": "金運の不安に寄り添う投稿",
+        "fortune_type": "money_luck",
+        "target_pain_category": "money",
+        "structure": "\n".join(
+            [
+                "1. お金の不安を受け止める",
+                "2. 今の金運の流れをやさしく表現する",
+                "3. 一発逆転ではなく整える視点を出す",
+                "4. 今日できる小さな行動を1つ提案する",
+                "5. 関連商品がある場合だけ自然に紹介する",
+                "6. #PRを明記する",
+            ]
+        ),
+        "prohibited_patterns": "\n".join(
+            ["必ずお金が入る", "金運が爆上がり", "買わないと損", "今すぐ買わないと運気が落ちる"]
+        ),
+    },
+    {
+        "name": "相手の気持ちに悩む人への投稿",
+        "fortune_type": "love_luck",
+        "target_pain_category": "love",
+        "structure": "\n".join(
+            [
+                "1. 相手の気持ちがわからない不安を受け止める",
+                "2. 断定せず、可能性として流れを伝える",
+                "3. 相手を操作する方向にしない",
+                "4. 読者自身の気持ちを確認する",
+                "5. 自分を大切にする小さな行動を提案する",
+                "6. #PRを明記する",
+            ]
+        ),
+        "prohibited_patterns": "\n".join(["必ず復縁できる", "相手から連絡が来る", "相手を思い通りにする", "この方法で愛される"]),
+    },
+    {
+        "name": "仕事と将来不安に寄り添う投稿",
+        "fortune_type": "work_luck",
+        "target_pain_category": "work",
+        "structure": "\n".join(
+            [
+                "1. 仕事や将来への不安を受け止める",
+                "2. 今の流れを整理する",
+                "3. 向いている行動を小さく提案する",
+                "4. 転職成功や収益を保証しない",
+                "5. 学びや整理ツールとして商品を自然に紹介する",
+                "6. #PRを明記する",
+            ]
+        ),
+        "prohibited_patterns": "\n".join(["必ず転職成功", "絶対稼げる", "これだけで人生逆転", "誰でも簡単に成功"]),
+    },
+    {
         "name": "金運占い投稿テンプレート",
         "fortune_type": "money_luck",
         "target_pain_category": "money",

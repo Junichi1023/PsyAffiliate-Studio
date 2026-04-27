@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Save, Settings as SettingsIcon, ShieldCheck } from "lucide-react";
 import { api } from "../api/client";
+import { PLATFORM_LABELS } from "../constants/labels";
 import { AppSettings, Platform } from "../types";
 
 const emptySettings: AppSettings = {
@@ -48,11 +49,14 @@ export default function Settings() {
     <section className="settings-layout">
       <form className="panel form-panel" onSubmit={save}>
         <div className="panel-title">
-          <h3>Settings</h3>
+          <h3>設定</h3>
           <SettingsIcon size={18} />
         </div>
+        <p className="page-description compact">
+          AIモデル、PR表記、ブランドボイスなどを設定します。APIキーはGitHubにコミットしないでください。将来的にはOS Keychain管理に移行予定です。
+        </p>
         <label>
-          OpenAI API Key
+          OpenAI APIキー
           <input
             type="password"
             value={form.openai_api_key}
@@ -61,23 +65,23 @@ export default function Settings() {
           />
         </label>
         <label>
-          OpenAI Model
+          使用モデル
           <input value={form.openai_model} onChange={(event) => setForm({ ...form, openai_model: event.target.value })} />
         </label>
         <label>
-          default_platform
+          標準の投稿先
           <select value={form.default_platform} onChange={(event) => setForm({ ...form, default_platform: event.target.value as Platform })}>
-            <option value="threads">threads</option>
-            <option value="instagram">instagram</option>
-            <option value="both">both</option>
+            <option value="threads">{PLATFORM_LABELS.threads}</option>
+            <option value="instagram">{PLATFORM_LABELS.instagram}</option>
+            <option value="both">{PLATFORM_LABELS.both}</option>
           </select>
         </label>
         <label>
-          default_pr_disclosure
+          標準PR表記
           <input value={form.default_pr_disclosure} onChange={(event) => setForm({ ...form, default_pr_disclosure: event.target.value })} />
         </label>
         <label>
-          brand_voice_summary
+          ブランドボイス
           <textarea rows={5} value={form.brand_voice_summary} onChange={(event) => setForm({ ...form, brand_voice_summary: event.target.value })} />
         </label>
         <button className="primary" type="submit">
@@ -87,13 +91,13 @@ export default function Settings() {
       </form>
       <section className="panel">
         <div className="panel-title">
-          <h3>Runtime</h3>
+          <h3>現在の設定</h3>
           <ShieldCheck size={18} />
         </div>
         <dl className="settings-readout">
-          <div><dt>API Key</dt><dd>{settings.openai_api_key_set ? "set" : "not set"}</dd></div>
-          <div><dt>Model</dt><dd>{settings.openai_model}</dd></div>
-          <div><dt>PR</dt><dd>{settings.default_pr_disclosure}</dd></div>
+          <div><dt>APIキー</dt><dd>{settings.openai_api_key_set ? "設定済み" : "未設定"}</dd></div>
+          <div><dt>使用モデル</dt><dd>{settings.openai_model}</dd></div>
+          <div><dt>標準PR表記</dt><dd>{settings.default_pr_disclosure}</dd></div>
         </dl>
       </section>
     </section>

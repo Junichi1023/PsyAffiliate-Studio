@@ -1,8 +1,10 @@
 # PsyAffiliate Studio
 
-PsyAffiliate Studio は、Threads・Instagram向けに「心理学 × AI × アフィリエイト」投稿を企画、生成、審査、保存するためのデスクトップMVPです。
+PsyAffiliate Studio は、Threads・Instagram向けに「占い × 心理学 × AI × アフィリエイト」投稿を企画、生成、審査、保存するためのデスクトップMVPです。
 
 読者を騙してリンクを踏ませる設計ではなく、読者の悩みに合う情報を提供し、PRを明示したうえで、必要な人だけが納得してクリックできる健全なSNSアフィリエイト運用を支援します。
+
+占いは断定予言として扱いません。金運、恋愛、仕事、人間関係などの不安に寄り添い、自己理解と小さな行動整理につなげるための投稿を作る運用OSです。
 
 ## 技術スタック
 
@@ -38,6 +40,7 @@ PsyAffiliate-Studio/
     src/
       api/
       components/
+      constants/
       pages/
       types/
       styles/
@@ -130,7 +133,7 @@ npm run test
 - 投稿下書き保存
 - 下書き一覧、ステータス管理、スケジュール日時入力
 - CSVエクスポート
-- Settings画面
+- 設定画面
 
 ## Phase 1.5でできること
 
@@ -138,28 +141,34 @@ npm run test
 - 悩み別ペルソナ管理
 - 占い投稿テンプレート管理
 - 金運・恋愛・仕事運テンプレートの初期seed
+- 日本語UIでのダッシュボード、投稿作成、下書き・投稿管理
+- 投稿作成時に悩みペルソナ、占いジャンル、占いテンプレート、商品、アフィリエイト導線を一連の流れで選択
 - 投稿生成時の `fortune_type`, `persona_pain_id`, `fortune_template_id`, `affiliate_intent` 指定
 - 寄り添い品質チェック
 - 占い危険表現、断定予言、依存誘導、恐怖訴求の検出強化
 - Draftごとの `empathy_score`, `publish_ready`, `publish_block_reason` 管理
 - `approved` かつ `compliance_score >= 90` かつ `empathy_score >= 75` のDraftだけmock publish可能
+- mock投稿対象は、承認済み、安全性、寄り添い度、投稿準備OKの条件をすべて満たす下書きだけ
 
 ## Phase 2でやること
 
 - Threads API 実投稿
 - Instagram Graph API 実投稿
 - `approved` ステータス必須の予約投稿ワーカー
-- mock publishを実API投稿に差し替えるpublisher実装
+- mock投稿を実API投稿に差し替えるpublisher実装
 - 投稿結果の external id / `posted_at` 保存
+- 承認済み・安全性スコア90以上・寄り添いスコア75以上・`publish_ready` の投稿だけをSNS APIへ渡す投稿ゲート
 - クリック計測、収益分析
 - Instagramカルーセル画像生成
 - ChromaDB / LanceDB への検索差し替え
-- OpenAI API Key の OS Keychain 管理
+- OpenAI APIキーの OS Keychain 管理
 
 ## 注意事項
 
 - 医療的断定は禁止です。「治る」「必ず改善」などは避けてください。
+- 占いを「必ず当たる」「運命が変わる」などの断定予言として扱わないでください。
 - アフィリエイト投稿では `#PR` または「アフィリエイトリンクを含みます」を明記してください。
 - ステルスマーケティング規制に対応するため、広告・PRであることを隠さないでください。
-- 自動投稿はPhase 1では行いません。将来実装時も、人間が `approved` にした投稿だけを対象にしてください。
+- 自動投稿はPhase 1では行いません。将来実装時も、人間が `approved` にし、安全性・寄り添い条件を満たした投稿だけを対象にしてください。
+- アフィリエイト導線は「買えば救われる」「買わないと不幸になる」形にしないでください。
 - APIキーやアクセストークンをコードやGitHubにコミットしないでください。
