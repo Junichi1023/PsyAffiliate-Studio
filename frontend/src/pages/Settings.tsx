@@ -10,6 +10,9 @@ const emptySettings: AppSettings = {
   default_platform: "threads",
   default_pr_disclosure: "#PR",
   brand_voice_summary: "",
+  typefully_api_key_set: false,
+  typefully_social_set_id: "",
+  typefully_default_schedule_mode: "draft_only",
 };
 
 export default function Settings() {

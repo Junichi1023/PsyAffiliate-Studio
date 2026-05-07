@@ -12,11 +12,18 @@ from .routers import (
     dashboard,
     drafts,
     fortune_templates,
+    fortune_a8_offers,
     health,
+    imports,
     knowledge,
+    note_cta_templates,
+    note_funnel_pages,
     persona_pains,
     publish,
     settings,
+    threads_plan,
+    threads_post_templates,
+    typefully,
 )
 
 
@@ -42,9 +49,16 @@ def create_app() -> FastAPI:
     app.include_router(affiliate_products.router)
     app.include_router(persona_pains.router)
     app.include_router(fortune_templates.router)
+    app.include_router(note_funnel_pages.router)
+    app.include_router(fortune_a8_offers.router)
+    app.include_router(threads_post_templates.router)
+    app.include_router(note_cta_templates.router)
+    app.include_router(threads_plan.router)
+    app.include_router(imports.router)
     app.include_router(content.router)
     app.include_router(drafts.router)
     app.include_router(publish.router)
+    app.include_router(typefully.router)
     app.include_router(settings.router)
     return app
 

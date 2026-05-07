@@ -54,13 +54,17 @@ def _fallback_generation(
     pr = "#PR"
     product_line = ""
     if product:
-        product_line = f"\n\n関連: {product['name']}\n{product.get('display_url') or product['affiliate_url']}"
+        product_line = f"\n\n関連テーマ: {product['name']}（Threads本文には広告リンクを直接入れません）"
 
     body = (
-        "これはOPENAI_API_KEY未設定時のサンプル投稿です。"
-        "AIと心理学を使って、今日できる小さな一歩を整理します。#PR\n\n"
+        "【PR】\n\n"
+        "連絡が来ない時間が長いと、\n"
+        "それだけで「もう無理なのかな」と決めつけたくなることがあります。\n\n"
+        "でも、相手の気持ちを当てにいく前に、\n"
+        "まずは自分が何を知りたいのかを整理するだけでも、少し呼吸がしやすくなります。\n\n"
         f"テーマ: {request.theme}\n"
-        f"読者: {request.target_reader}"
+        f"読者: {request.target_reader}\n\n"
+        "相談前に聞きたいことを整理するチェックリストは、プロフィールのnoteにまとめています。"
         f"{product_line}"
     ).strip()
     caption = None
@@ -70,7 +74,7 @@ def _fallback_generation(
             "無理に変えようとせず、行動を小さく分けて試してみてください。"
         )
 
-    cta = "必要な人はプロフィールのリンクからどうぞ。"
+    cta = "必要な人はプロフィールのnoteを参考にしてください。"
     return {
         "platform": request.platform,
         "theme": request.theme,
@@ -80,7 +84,7 @@ def _fallback_generation(
         "pr_disclosure": pr,
         "affiliate_product_id": product["id"] if product else None,
         "compliance_score": 90,
-        "risk_notes": ["モック生成", "PR表記あり", reason],
+        "risk_notes": ["モック生成", "PR表記あり", "A8直リンクなし", reason],
         "empathy_score": 82,
         "empathy_notes": ["読者の不安を受け止めるモック生成です。", "今日できる小さな行動提案を含めています。"],
         "suggested_hashtags": ["#AI活用", "#心理学", "#PR"],

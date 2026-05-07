@@ -2,12 +2,20 @@ import type { Draft, DraftStatus, Platform } from "../types";
 
 export const PAGE_LABELS = {
   dashboard: "ダッシュボード",
+  "thirty-day-plan": "30日運用プラン",
+  "typefully-jobs": "Typefully予約管理",
   knowledge: "ナレッジ",
+  "facebook-import": "Facebook取り込み",
   products: "アフィリエイト商品",
+  "note-funnel": "note導線管理",
+  "fortune-a8-offers": "A8占い案件",
+  "note-ctas": "CTA管理",
   "persona-pains": "悩みペルソナ",
   "fortune-templates": "占いテンプレート",
+  "threads-templates": "Threads投稿テンプレート",
   generator: "投稿作成",
   drafts: "下書き・投稿管理",
+  "typefully-settings": "Typefully設定",
   settings: "設定",
 } as const;
 

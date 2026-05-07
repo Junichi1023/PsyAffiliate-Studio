@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 
 from ...repositories import get_product
+from ..routing_checks import detect_direct_a8_link
 
 
 DANGEROUS_TERMS = [
@@ -29,6 +30,13 @@ DANGEROUS_TERMS = [
     "呪い",
     "除霊",
     "波動が悪い",
+    "必ず復縁できます",
+    "彼の本音が全部わかる",
+    "登録しないと不幸になる",
+    "この占い師だけが本物",
+    "連絡が来る",
+    "買わないと損",
+    "今すぐ申し込まないと損",
 ]
 
 PR_PATTERNS = [
@@ -133,6 +141,11 @@ def check_compliance(
             risk_notes.append(f"不安を過度に煽る表現「{term}」があります。")
             score -= 12
 
+    if detect_direct_a8_link(text):
+        flagged_terms.append("A8直リンク")
+        risk_notes.append("Threads本文・CTAにA8直リンクまたはASP広告リンクらしきURLがあります。")
+        score -= 30
+
     has_pr_disclosure = any(re.search(pattern, text, flags=re.IGNORECASE) for pattern in PR_PATTERNS)
 
     product_claims = prohibited_claims
@@ -140,6 +153,10 @@ def check_compliance(
         try:
             product = get_product(affiliate_product_id)
             product_claims = product_claims or product.get("prohibited_claims")
+            if detect_direct_a8_link(text, [product.get("affiliate_url") or ""]):
+                flagged_terms.append("affiliate_url")
+                risk_notes.append("登録済みのアフィリエイトURLが本文に含まれています。")
+                score -= 30
         except Exception:
             risk_notes.append("紐づくアフィリエイト商品を確認できませんでした。")
             score -= 8

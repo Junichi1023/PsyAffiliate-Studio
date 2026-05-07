@@ -97,6 +97,15 @@ export function DraftCard({
         <span className={draft.publish_ready ? "badge green" : "badge muted-badge"}>
           {publishReadyLabel(draft.publish_ready)}
         </span>
+        <span className={draft.direct_a8_link_detected ? "badge danger-badge" : "badge green"}>
+          {draft.direct_a8_link_detected ? "A8直リンク検出" : "A8直リンクなし"}
+        </span>
+        <span className={draft.profile_note_cta_included ? "badge green" : "badge muted-badge"}>
+          {draft.profile_note_cta_included ? "note導線あり" : "note導線なし"}
+        </span>
+        <span className={draft.note_page_id ? "badge green" : "badge muted-badge"}>
+          {draft.note_page_id ? "note設定済み" : "note未設定"}
+        </span>
         {disabledReason && <span className="muted">{disabledReason}</span>}
         {!disabledReason && !draft.publish_ready && draft.publish_block_reason && <span className="muted">{draft.publish_block_reason}</span>}
       </div>

@@ -34,10 +34,13 @@ def test_compliance_warns_affiliate_without_pr(client: TestClient):
 def test_compliance_detects_fortune_dangerous_terms(client: TestClient):
     response = client.post(
         "/api/content/compliance-check",
-        json={"body": "この占いは必ず当たる。金運が爆上がりします。復縁できる方法です。"},
+        json={"body": "この占いは必ず当たる。金運が爆上がりします。復縁できる方法です。必ず復縁できます。100%当たる。彼の本音が全部わかる。"},
     )
     assert response.status_code == 200
     data = response.json()
     assert "必ず当たる" in data["flagged_terms"]
     assert "金運が爆上がり" in data["flagged_terms"]
     assert "復縁できる" in data["flagged_terms"]
+    assert "必ず復縁できます" in data["flagged_terms"]
+    assert "100%当たる" in data["flagged_terms"]
+    assert "彼の本音が全部わかる" in data["flagged_terms"]

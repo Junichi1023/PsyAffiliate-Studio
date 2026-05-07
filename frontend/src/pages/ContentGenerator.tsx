@@ -16,16 +16,20 @@ import {
   AffiliateIntent,
   AffiliateProduct,
   DraftStatus,
+  FortuneA8Offer,
   FortuneTemplate,
   GeneratedContent,
   GenerateContentRequest,
+  NoteCtaTemplate,
+  NoteFunnelPage,
   PersonaPain,
   Platform,
+  ScheduleMode,
+  ThreadsPostTemplate,
   Tone,
 } from "../types";
 import { EmptyState, scoreClass } from "./shared";
 
-const platformOptions = Object.entries(PLATFORM_LABELS);
 const toneOptions = Object.entries(TONE_LABELS);
 const affiliateIntentOptions = Object.entries(AFFILIATE_INTENT_LABELS);
 const fortuneTypeOptions = Object.entries(FORTUNE_TYPE_LABELS);
@@ -34,6 +38,10 @@ export default function ContentGenerator() {
   const [products, setProducts] = useState<AffiliateProduct[]>([]);
   const [personas, setPersonas] = useState<PersonaPain[]>([]);
   const [templates, setTemplates] = useState<FortuneTemplate[]>([]);
+  const [notePages, setNotePages] = useState<NoteFunnelPage[]>([]);
+  const [threadsTemplates, setThreadsTemplates] = useState<ThreadsPostTemplate[]>([]);
+  const [ctas, setCtas] = useState<NoteCtaTemplate[]>([]);
+  const [offers, setOffers] = useState<FortuneA8Offer[]>([]);
   const [generated, setGenerated] = useState<GeneratedContent | null>(null);
   const [generating, setGenerating] = useState(false);
   const [form, setForm] = useState<GenerateContentRequest>({
@@ -46,16 +54,27 @@ export default function ContentGenerator() {
     persona_pain_id: null,
     fortune_template_id: null,
     affiliate_intent: "none",
+    pain_category: "復縁",
+    post_type: "empathy",
+    note_page_id: null,
+    fortune_offer_id: null,
+    threads_template_id: null,
+    cta_template_id: null,
+    typefully_schedule_mode: "draft_only",
+    typefully_scheduled_at: null,
   });
 
   useEffect(() => {
     api.listProducts().then(setProducts);
     api.listPersonaPains().then(setPersonas);
     api.listFortuneTemplates().then(setTemplates);
-    api.getSettings().then((settings) => setForm((current) => ({ ...current, platform: settings.default_platform })));
+    api.listNoteFunnelPages().then(setNotePages);
+    api.listThreadsPostTemplates().then(setThreadsTemplates);
+    api.listNoteCtaTemplates().then(setCtas);
+    api.listFortuneA8Offers().then(setOffers);
+    api.getSettings().then(() => setForm((current) => ({ ...current, platform: "threads" })));
   }, []);
 
-  const activeProducts = useMemo(() => products.filter((product) => product.is_active), [products]);
   const selectedGeneratedProduct = useMemo(
     () => products.find((product) => product.id === generated?.affiliate_product_id),
     [generated?.affiliate_product_id, products],
@@ -86,6 +105,9 @@ export default function ContentGenerator() {
       fortune_type: form.fortune_type ?? null,
       persona_pain_id: form.persona_pain_id ?? null,
       fortune_template_id: form.fortune_template_id ?? null,
+      note_page_id: form.note_page_id ?? null,
+      fortune_offer_id: form.fortune_offer_id ?? null,
+      threads_template_id: form.threads_template_id ?? null,
       affiliate_intent: form.affiliate_intent ?? "none",
       empathy_score: generated.empathy_score ?? null,
       empathy_notes: generated.empathy_notes.join("\n"),
@@ -103,16 +125,37 @@ export default function ContentGenerator() {
           <Sparkles size={18} />
         </div>
         <p className="page-description compact">
-          悩み、占術、テンプレート、商品導線を選び、Threads/Instagram向け投稿を作成します。
+          恋愛・復縁・片思いの悩みに寄り添うThreads投稿を作成します。A8リンクは本文に入れず、プロフィールのnoteへ自然に誘導します。
         </p>
         <label>
-          投稿テーマ
+          1. どんな悩みに向ける？
           <input value={form.theme} onChange={(event) => setForm({ ...form, theme: event.target.value })} required />
         </label>
         <label>
           誰の悩みに向けるか
           <input value={form.target_reader} onChange={(event) => setForm({ ...form, target_reader: event.target.value })} required />
         </label>
+        <div className="two-columns">
+          <label>
+            悩みカテゴリ
+            <select value={form.pain_category ?? ""} onChange={(event) => setForm({ ...form, pain_category: event.target.value })}>
+              {["復縁", "元彼・元カノ", "片思い", "相手の気持ち", "音信不通", "曖昧な関係", "婚期", "職場の人間関係", "仕事運", "将来不安"].map((item) => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            2. どの投稿タイプで作る？
+            <select value={form.post_type ?? "empathy"} onChange={(event) => setForm({ ...form, post_type: event.target.value })}>
+              <option value="empathy">共感型</option>
+              <option value="checklist">チェックリスト型</option>
+              <option value="avoid_mistake">失敗回避型</option>
+              <option value="question_examples">質問例型</option>
+              <option value="self_reflection">自分の考え型</option>
+              <option value="soft_note_cta">note誘導型</option>
+            </select>
+          </label>
+        </div>
         <label>
           悩みペルソナ
           <select
@@ -139,7 +182,7 @@ export default function ContentGenerator() {
             </select>
           </label>
           <label>
-            占いテンプレート
+            旧占いテンプレート
             <select
               value={form.fortune_template_id ?? ""}
               onChange={(event) => setForm({ ...form, fortune_template_id: event.target.value ? Number(event.target.value) : null })}
@@ -153,19 +196,30 @@ export default function ContentGenerator() {
             </select>
           </label>
         </div>
+        <label>
+          Threads投稿テンプレート
+          <select value={form.threads_template_id ?? ""} onChange={(event) => setForm({ ...form, threads_template_id: event.target.value ? Number(event.target.value) : null })}>
+            <option value="">なし</option>
+            {threadsTemplates.map((template) => <option key={template.id} value={template.id}>{template.name}</option>)}
+          </select>
+        </label>
+        <label>
+          3. どのnote記事へつなげる？
+          <select value={form.note_page_id ?? ""} onChange={(event) => setForm({ ...form, note_page_id: event.target.value ? Number(event.target.value) : null })}>
+            <option value="">未設定</option>
+            {notePages.map((page) => <option key={page.id} value={page.id}>{page.title}</option>)}
+          </select>
+        </label>
+        <label>
+          4. どのCTAを使う？
+          <select value={form.cta_template_id ?? ""} onChange={(event) => setForm({ ...form, cta_template_id: event.target.value ? Number(event.target.value) : null })}>
+            <option value="">自動</option>
+            {ctas.map((cta) => <option key={cta.id} value={cta.id}>{cta.name}</option>)}
+          </select>
+        </label>
         <div className="two-columns">
           <label>
-            投稿先
-            <select value={form.platform} onChange={(event) => setForm({ ...form, platform: event.target.value as Platform })}>
-              {platformOptions.map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            文章トーン
+            5. どんなトーンで書く？
             <select value={form.tone} onChange={(event) => setForm({ ...form, tone: event.target.value as Tone })}>
               {toneOptions.map(([value, label]) => (
                 <option key={value} value={value}>
@@ -174,21 +228,31 @@ export default function ContentGenerator() {
               ))}
             </select>
           </label>
+          <label>
+            Typefully予約予定
+            <select value={form.typefully_schedule_mode ?? "draft_only"} onChange={(event) => setForm({ ...form, typefully_schedule_mode: event.target.value as ScheduleMode })}>
+              <option value="draft_only">下書きのみ</option>
+              <option value="next_free_slot">次の空き枠</option>
+              <option value="scheduled_time">指定日時</option>
+            </select>
+          </label>
         </div>
         <label>
-          紹介する商品
+          note内で使うA8占い案件（Threads本文には入れない）
           <select
-            value={form.selected_product_id ?? ""}
-            onChange={(event) => setForm({ ...form, selected_product_id: event.target.value ? Number(event.target.value) : null })}
+            value={form.fortune_offer_id ?? ""}
+            onChange={(event) => setForm({ ...form, fortune_offer_id: event.target.value ? Number(event.target.value) : null })}
           >
             <option value="">なし</option>
-            {activeProducts.map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.name}
+            {offers.filter((offer) => offer.is_active).map((offer) => (
+              <option key={offer.id} value={offer.id}>
+                {offer.offer_name}
               </option>
             ))}
           </select>
         </label>
+        <div className="info-strip">投稿先はThreads固定です。予約投稿は承認後にTypefullyへ送ります。</div>
+        <p className="field-note">6. 生成結果を確認 → 7. 下書き保存 → 8. 承認後にTypefully予約、の順で進めます。</p>
         <label>
           アフィリエイト導線の強さ
           <select value={form.affiliate_intent ?? "none"} onChange={(event) => setForm({ ...form, affiliate_intent: event.target.value as AffiliateIntent })}>

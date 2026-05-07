@@ -80,7 +80,20 @@ button:disabled {
 
 nav {
   display: grid;
-  gap: 8px;
+  gap: 14px;
+}
+
+.nav-group {
+  display: grid;
+  gap: 6px;
+}
+
+.nav-group-label {
+  color: #8da2ba;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 0 12px;
 }
 
 .nav-item {
@@ -450,6 +463,11 @@ textarea:focus {
 .muted-badge {
   background: #e2e8f0;
   color: #64748b;
+}
+
+.danger-badge {
+  background: #ffe4e6;
+  color: #be123c;
 }
 
 .muted {

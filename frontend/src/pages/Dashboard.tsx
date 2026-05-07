@@ -19,7 +19,7 @@ export default function Dashboard() {
   return (
     <section className="dashboard-page">
       <p className="page-description">
-        今日の投稿準備、承認待ち、投稿可能な下書き、リスクのある投稿を確認します。
+        FacebookナレッジからThreads投稿を作り、Typefully予約、プロフィールnote、A8占い案件へつなぐ運用状況を確認します。
       </p>
       <div className="dashboard-grid">
         <div className="metrics metrics-grid">
@@ -31,6 +31,12 @@ export default function Dashboard() {
           <StatCard label="承認待ち" value={dashboard?.pending_review ?? 0} tone="amber" />
           <StatCard label="投稿準備OK" value={dashboard?.publish_ready_count ?? 0} tone="teal" />
           <StatCard label="リスクあり投稿" value={dashboard?.risky_draft_count ?? 0} tone="amber" />
+          <StatCard label="今日の予約予定" value={dashboard?.today_scheduled_count ?? 0} tone="teal" />
+          <StatCard label="Typefully予約待ち" value={dashboard?.typefully_waiting_count ?? 0} />
+          <StatCard label="note導線未設定" value={dashboard?.note_missing_draft_count ?? 0} tone="amber" />
+          <StatCard label="A8直リンク検出" value={dashboard?.a8_link_detected_count ?? 0} tone="amber" />
+          <StatCard label="Facebook候補" value={dashboard?.facebook_candidate_count ?? 0} />
+          <StatCard label="30日プラン進捗" value={dashboard?.plan_total_count ? Math.round(((dashboard?.plan_done_count ?? 0) / dashboard.plan_total_count) * 100) : 0} tone="teal" />
         </div>
         <section className="panel todo-panel">
           <div className="panel-title">
@@ -38,14 +44,22 @@ export default function Dashboard() {
             <FileText size={18} />
           </div>
           <ul className="todo-list">
-            <li>要確認の投稿を確認する</li>
-            <li>投稿準備OKの下書きを投稿する</li>
-            <li>スコアが低い投稿を修正する</li>
-            <li>新しい悩みペルソナを追加する</li>
-            <li>占いテンプレートを増やす</li>
+            <li>Facebookデータを取り込む</li>
+            <li>note導線URLを設定する</li>
+            <li>Threads投稿を3本作成する</li>
+            <li>承認済み投稿をTypefullyへ予約する</li>
+            <li>A8直リンクが入っていないか確認する</li>
           </ul>
         </section>
       </div>
+      <section className="panel">
+        <div className="panel-title"><h3>今週の投稿タイプ配分</h3></div>
+        <div className="hashtag-row">
+          {Object.entries(dashboard?.weekly_post_type_distribution ?? {}).map(([label, value]) => (
+            <span key={label}>{label}: {value}%</span>
+          ))}
+        </div>
+      </section>
       <section className="panel">
         <div className="panel-title">
           <h3>最近生成した投稿</h3>

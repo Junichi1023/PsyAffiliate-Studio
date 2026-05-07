@@ -1,10 +1,23 @@
 # PsyAffiliate Studio
 
-PsyAffiliate Studio は、Threads・Instagram向けに「占い × 心理学 × AI × アフィリエイト」投稿を企画、生成、審査、保存するためのデスクトップMVPです。
+PsyAffiliate Studio は、Threads向けに「Facebookナレッジ × 恋愛占い投稿 × Typefully予約 × note導線 × A8電話占い案件」を一体で運用するためのデスクトップMVPです。
 
 読者を騙してリンクを踏ませる設計ではなく、読者の悩みに合う情報を提供し、PRを明示したうえで、必要な人だけが納得してクリックできる健全なSNSアフィリエイト運用を支援します。
 
 占いは断定予言として扱いません。金運、恋愛、仕事、人間関係などの不安に寄り添い、自己理解と小さな行動整理につなげるための投稿を作る運用OSです。
+
+現在の主導線は次の1本に絞っています。
+
+```text
+Facebook過去データ
+→ 自分らしさナレッジ化
+→ 恋愛・復縁・片思い系Threads投稿
+→ Typefully予約
+→ Threadsプロフィールのnote URL
+→ note記事内でA8.netの電話占い・占いアプリ案件へ誘導
+```
+
+Threads本文にA8リンクを直貼りしません。Threadsは悩みに寄り添う入口、noteは比較・注意点・質問例を整理する場所、A8案件はnote記事内で紹介するものとして扱います。
 
 ## 技術スタック
 
@@ -15,6 +28,7 @@ PsyAffiliate Studio は、Threads・Instagram向けに「占い × 心理学 × 
 - AI: OpenAI Responses API, `gpt-5.5`
 - Search: Phase 1 は `knowledge_items` の `LIKE` 検索
 - SNS: Phase 1.5 は Threads / Instagram 投稿サービスのモック投稿判定
+- Scheduling: Typefully API v2想定。APIキー未設定時はmock予約
 
 ## ディレクトリ構成
 
@@ -86,6 +100,33 @@ API:
 - `GET /api/drafts/export.csv`
 - `POST /api/publish/drafts/{draft_id}/mock`
 - `GET/PUT /api/settings`
+- `POST /api/import/facebook/preview`
+- `GET /api/import/sessions`
+- `GET/PUT /api/import/candidates/{id}`
+- `POST /api/import/sessions/{id}/commit`
+- `GET/POST/PUT/DELETE /api/note-funnel-pages`
+- `GET/POST/PUT/DELETE /api/fortune-a8-offers`
+- `GET/POST/PUT/DELETE /api/threads-post-templates`
+- `GET/POST/PUT/DELETE /api/note-cta-templates`
+- `GET/PUT /api/threads-30day-plan`
+- `POST /api/typefully/drafts/{draft_id}/schedule`
+- `GET /api/typefully/jobs`
+
+## 自動化ループCLI
+
+初回の占いアフィリエイト検証ループは、下記でローカル実行できます。
+
+```bash
+PYTHONPATH=backend .venv/bin/python scripts/run_affiliate_cycle.py --genre 占い --count 12
+```
+
+このCLIは、ぱううAIエージェントのプロフィール、占い案件リサーチ、悩みペルソナ、7項目スコア、投稿下書き、画像生成用プロンプト、日次レポートを作成します。外部SNSへの無断投稿、無差別コメント、DM自動送信は行いません。
+
+案件分析だけ見たい場合:
+
+```bash
+PYTHONPATH=backend .venv/bin/python scripts/analyze_affiliate_genre.py 占い
+```
 
 ## Frontend起動
 
@@ -150,12 +191,57 @@ npm run test
 - `approved` かつ `compliance_score >= 90` かつ `empathy_score >= 75` のDraftだけmock publish可能
 - mock投稿対象は、承認済み、安全性、寄り添い度、投稿準備OKの条件をすべて満たす下書きだけ
 
+## 収益化導線でできること
+
+- Facebook ZIPをアップロードし、Messengerを除外してPII削除済みのナレッジ候補を作成
+- 候補をプレビュー、選択、編集してから `knowledge_items` へ登録
+- note電話占い紹介記事URLを管理
+- A8.netの電話占い・チャット占い・占いアプリ案件を管理
+- Threads投稿テンプレートとnote CTAを管理
+- Threads投稿本文にA8直リンクが入った場合に検出
+- プロフィールnote導線が入っているかを検出
+- 承認済み、安全性90以上、寄り添い75以上、A8直リンクなし、note導線あり、note記事設定済みの投稿だけTypefully予約可能
+- 30日運用プランと投稿ジャンル配分を確認
+
+## Typefully設定方法
+
+`.env` またはアプリの「Typefully設定」で以下を設定します。
+
+```env
+TYPEFULLY_API_KEY=
+TYPEFULLY_SOCIAL_SET_ID=
+TYPEFULLY_DEFAULT_SCHEDULE_MODE=draft_only
+```
+
+APIキー未設定時はmockレスポンスで予約ジョブを作成します。`draft_only` は下書き作成、`next_free_slot` はTypefullyの次の空き枠、`scheduled_time` は指定日時で予約する想定です。
+
+## note URL設定方法
+
+「note導線管理」で、Threadsプロフィールに置くnote記事URLを登録します。記事タイプは `first_time_guide`、`question_examples`、`avoid_mistakes`、`dependency_prevention`、`comparison` などを使います。
+
+## A8占い案件登録方法
+
+「A8占い案件」で、案件名、サービス種別、A8広告URL、報酬額、成果条件、否認条件、禁止訴求を登録します。`affiliate_url` はnote記事内だけで使い、Threads本文には入れません。
+
+## Facebook取り込み方法
+
+「Facebook取り込み」からFacebook ZIPをアップロードします。Messenger、Inbox、Chat系ファイルはデフォルト除外します。メール、電話番号、URLを削除した候補だけをプレビューし、選択した候補だけナレッジ登録します。
+
+## 30日運用プラン
+
+- 1〜3日目: A8案件10〜20件リスト化
+- 4〜7日目: 電話占い・占いアプリ比較note作成
+- 8〜14日目: Threads投稿1日3本
+- 15〜21日目: 反応が良いテーマでnote記事2本追加
+- 22〜30日目: A8クリック数、note閲覧数、Threads反応を見て案件・CTA・投稿文を修正
+
+投稿配分は、恋愛・復縁の共感投稿40%、占いの使い方・注意点25%、質問例・チェックリスト20%、記事誘導10%、自分の考え・体験談5%を目安にしています。
+
 ## Phase 2でやること
 
-- Threads API 実投稿
-- Instagram Graph API 実投稿
+- Typefully API本番レスポンスの詳細マッピング
+- Typefully予約キャンセルの実API連携
 - `approved` ステータス必須の予約投稿ワーカー
-- mock投稿を実API投稿に差し替えるpublisher実装
 - 投稿結果の external id / `posted_at` 保存
 - 承認済み・安全性スコア90以上・寄り添いスコア75以上・`publish_ready` の投稿だけをSNS APIへ渡す投稿ゲート
 - クリック計測、収益分析
@@ -168,7 +254,10 @@ npm run test
 - 医療的断定は禁止です。「治る」「必ず改善」などは避けてください。
 - 占いを「必ず当たる」「運命が変わる」などの断定予言として扱わないでください。
 - アフィリエイト投稿では `#PR` または「アフィリエイトリンクを含みます」を明記してください。
+- Threads投稿ではA8リンクを直貼りしないでください。プロフィールのnote記事へ誘導し、note記事内でA8案件を紹介してください。
 - ステルスマーケティング規制に対応するため、広告・PRであることを隠さないでください。
 - 自動投稿はPhase 1では行いません。将来実装時も、人間が `approved` にし、安全性・寄り添い条件を満たした投稿だけを対象にしてください。
 - アフィリエイト導線は「買えば救われる」「買わないと不幸になる」形にしないでください。
+- 占い依存を避けるため、電話占いは答えをもらう場所ではなく、相談前に気持ちや質問を整理する補助として説明してください。
+- 収益保証、復縁保証、的中保証はしません。最終投稿前に人間レビューが必要です。
 - APIキーやアクセストークンをコードやGitHubにコミットしないでください。
