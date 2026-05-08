@@ -13,6 +13,7 @@ const emptySettings: AppSettings = {
   typefully_api_key_set: false,
   typefully_social_set_id: "",
   typefully_default_schedule_mode: "draft_only",
+  profile_note_url: "",
 };
 
 export default function Settings() {

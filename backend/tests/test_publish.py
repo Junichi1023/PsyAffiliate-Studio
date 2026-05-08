@@ -4,17 +4,19 @@ from fastapi.testclient import TestClient
 
 
 def _create_draft(client: TestClient, **overrides):
+    note = client.post("/api/note-funnel-pages", json={"title": "note", "note_url": "https://note.com/example"}).json()
     payload = {
         "platform": "threads",
         "theme": "金運不安の整え方",
-        "body": "#PR 不安な時ほど、今日できる小さな行動を1つ確認しましょう。",
-        "cta": "必要な人はプロフィールのリンクからどうぞ。",
+        "body": "#PR 不安な時ほど、今日できる小さな行動を1つ確認しましょう。プロフィールのnoteにまとめています。",
+        "cta": "必要な人はプロフィールのnoteからどうぞ。",
         "compliance_score": 95,
         "empathy_score": 82,
         "risk_notes": "PR表記あり",
         "empathy_notes": "読者の不安を受け止めています",
         "status": "approved",
         "affiliate_intent": "soft",
+        "note_page_id": note["id"],
     }
     payload.update(overrides)
     response = client.post("/api/drafts", json=payload)

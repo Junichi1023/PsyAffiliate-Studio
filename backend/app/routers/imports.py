@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from ..repositories import (
     commit_import_session,
@@ -11,19 +11,41 @@ from ..repositories import (
     update_import_candidate,
 )
 from ..schemas import ImportCandidate, ImportCandidateUpdate, ImportCommitResult, ImportSession, KnowledgeItem
-from ..services.facebook_importer import build_candidates_from_facebook_zip
+from ..services.facebook_importer import FacebookImportError, build_candidates_from_facebook_zip
 
 
 router = APIRouter(prefix="/api/import", tags=["import"])
 
 
 @router.post("/facebook/preview", response_model=ImportSession, status_code=201)
-async def preview_facebook_zip(file: UploadFile = File(...)) -> dict:
+async def preview_facebook_zip(
+    file: UploadFile | None = File(None),
+    use_ai_summary: bool = Form(False),
+    include_messages: bool = Form(False),
+    max_items: int = Form(2000),
+) -> dict:
+    if file is None:
+        raise HTTPException(status_code=400, detail="Facebook ZIPファイルを選択してください。")
+    filename = file.filename or "facebook.zip"
+    if not filename.lower().endswith(".zip"):
+        raise HTTPException(status_code=400, detail="FacebookからダウンロードしたZIPファイルを、解凍せずそのまま選択してください。")
     payload = await file.read()
-    result = build_candidates_from_facebook_zip(file.filename or "facebook.zip", payload)
+    if not payload:
+        raise HTTPException(status_code=400, detail="選択されたファイルが空です。FacebookのZIPファイルを選択してください。")
+    try:
+        result = build_candidates_from_facebook_zip(
+            filename,
+            payload,
+            max_items=max(1, min(max_items, 5000)),
+            include_messages=include_messages,
+            use_ai_summary=use_ai_summary,
+        )
+    except FacebookImportError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
     return create_import_session(
-        source_name=file.filename,
+        source_name=filename,
         total_items=result["total_items"],
+        sanitized_items=result["sanitized_items"],
         candidates=result["candidates"],
         redaction_summary=result["redaction_summary"],
     )

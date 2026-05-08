@@ -11,6 +11,7 @@ export default function TypefullyJobs() {
   const [scheduleMode, setScheduleMode] = useState<ScheduleMode>("draft_only");
   const [scheduledAt, setScheduledAt] = useState("");
   const [message, setMessage] = useState("");
+  const [onlyReady, setOnlyReady] = useState(false);
 
   async function load() {
     setDrafts(await api.listDrafts());
@@ -44,11 +45,15 @@ export default function TypefullyJobs() {
         <label>予約する下書き
           <select value={draftId} onChange={(e) => setDraftId(e.target.value ? Number(e.target.value) : "")}>
             <option value="">選択してください</option>
-            {drafts.map((draft) => {
+            {drafts.filter((draft) => !onlyReady || !mockPublishDisabledReason(draft)).map((draft) => {
               const reason = mockPublishDisabledReason(draft) || (draft.direct_a8_link_detected ? "A8直リンク検出" : "") || (!draft.note_page_id ? "note未設定" : "") || (!draft.profile_note_cta_included ? "note導線なし" : "");
               return <option key={draft.id} value={draft.id}>{draft.theme} / {reason || "予約可能候補"}</option>;
             })}
           </select>
+        </label>
+        <label className="checkbox-row">
+          <input type="checkbox" checked={onlyReady} onChange={(event) => setOnlyReady(event.target.checked)} />
+          Typefully予約可能な下書きだけ表示
         </label>
         <label>予約方法
           <select value={scheduleMode} onChange={(e) => setScheduleMode(e.target.value as ScheduleMode)}>
@@ -59,7 +64,7 @@ export default function TypefullyJobs() {
         </label>
         {scheduleMode === "scheduled_time" && <label>指定日時<input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} /></label>}
         <button className="primary" type="submit">Typefullyへ送る</button>
-        {message && <p className="field-note">{message}</p>}
+        {message && <p className={message.includes("未満") || message.includes("ありません") || message.includes("含まれています") ? "error-box" : "field-note"}>{message}</p>}
         <p className="field-note">Typefully側で予約済みの投稿をキャンセルする場合、Typefullyの画面でも確認してください。</p>
       </form>
 

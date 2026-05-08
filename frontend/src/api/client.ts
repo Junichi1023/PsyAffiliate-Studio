@@ -188,6 +188,7 @@ export interface AppSettings {
   typefully_api_key_set: boolean;
   typefully_social_set_id?: string | null;
   typefully_default_schedule_mode: ScheduleMode;
+  profile_note_url?: string | null;
 }
 
 export interface EmpathyCheckResult {
@@ -298,6 +299,12 @@ export interface ImportCandidate {
   selected: boolean;
 }
 
+export interface FacebookPreviewOptions {
+  use_ai_summary?: boolean;
+  include_messages?: boolean;
+  max_items?: number;
+}
+
 export interface Threads30DayPlanTask {
   id: number;
   day_number: number;
@@ -343,14 +350,26 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   });
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || response.statusText);
+    throw new Error(await extractErrorMessage(response));
   }
 
   if (response.status === 204) {
     return undefined as T;
   }
   return response.json() as Promise<T>;
+}
+
+async function extractErrorMessage(response: Response): Promise<string> {
+  const text = await response.text();
+  if (!text) return response.statusText;
+  try {
+    const parsed = JSON.parse(text);
+    if (typeof parsed.detail === "string") return parsed.detail;
+    if (Array.isArray(parsed.detail)) return parsed.detail.map((item: { msg?: string }) => item.msg ?? JSON.stringify(item)).join(" / ");
+  } catch {
+    return text;
+  }
+  return text;
 }
 
 export const api = {
@@ -426,11 +445,14 @@ export const api = {
     request<NoteCtaTemplate>(`/api/note-cta-templates/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
   deleteNoteCtaTemplate: (id: number) => request<void>(`/api/note-cta-templates/${id}`, { method: "DELETE" }),
 
-  uploadFacebookZipPreview: async (file: File) => {
+  uploadFacebookZipPreview: async (file: File, options: FacebookPreviewOptions = {}) => {
     const form = new FormData();
     form.append("file", file);
+    form.append("use_ai_summary", String(options.use_ai_summary ?? false));
+    form.append("include_messages", String(options.include_messages ?? false));
+    form.append("max_items", String(options.max_items ?? 2000));
     const response = await fetch(`${API_BASE}/api/import/facebook/preview`, { method: "POST", body: form });
-    if (!response.ok) throw new Error(await response.text());
+    if (!response.ok) throw new Error(await extractErrorMessage(response));
     return response.json() as Promise<ImportSession>;
   },
   listImportSessions: () => request<ImportSession[]>("/api/import/sessions"),

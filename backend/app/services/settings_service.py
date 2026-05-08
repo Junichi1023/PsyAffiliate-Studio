@@ -20,6 +20,7 @@ class RuntimeSettings:
     brand_voice_summary: str = ""
     typefully_social_set_id: str | None = None
     typefully_default_schedule_mode: str = "draft_only"
+    profile_note_url: str | None = None
 
 
 def _read_saved_settings() -> dict[str, Any]:
@@ -30,6 +31,7 @@ def _read_saved_settings() -> dict[str, Any]:
         "brand_voice_summary",
         "typefully_social_set_id",
         "typefully_default_schedule_mode",
+        "profile_note_url",
     ]
     return {key: get_setting(key) for key in keys}
 
@@ -49,6 +51,7 @@ def get_runtime_settings() -> RuntimeSettings:
         brand_voice_summary=saved.get("brand_voice_summary") or "",
         typefully_social_set_id=saved.get("typefully_social_set_id") or os.getenv("TYPEFULLY_SOCIAL_SET_ID"),
         typefully_default_schedule_mode=saved.get("typefully_default_schedule_mode") or os.getenv("TYPEFULLY_DEFAULT_SCHEDULE_MODE") or "draft_only",
+        profile_note_url=saved.get("profile_note_url") or os.getenv("PROFILE_NOTE_URL"),
     )
 
 
@@ -87,6 +90,7 @@ def update_runtime_settings(payload: dict[str, Any]) -> dict[str, Any]:
         "brand_voice_summary",
         "typefully_social_set_id",
         "typefully_default_schedule_mode",
+        "profile_note_url",
     ):
         if payload.get(key) is not None:
             current[key] = payload[key]
@@ -108,4 +112,5 @@ def settings_response() -> dict[str, Any]:
         "typefully_api_key_set": is_typefully_api_key_set(),
         "typefully_social_set_id": settings.typefully_social_set_id,
         "typefully_default_schedule_mode": settings.typefully_default_schedule_mode,
+        "profile_note_url": settings.profile_note_url,
     }

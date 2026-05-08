@@ -43,6 +43,7 @@ def build_generation_context(request: GenerateContentRequest, product: dict[str,
     threads_hooks = search_knowledge(f"{request.theme} {persona_category} threads_hook", limit=5)
     cta_templates = search_knowledge(f"{request.theme} {request.affiliate_intent} cta_template affiliate_offer", limit=5)
     fortune_disclaimers = search_knowledge("fortune_disclaimer prohibited_expression", limit=5)
+    facebook_voice = search_knowledge("facebook brand_voice threads_hook past_post cta_template persona_pain", limit=10)
     related_knowledge = search_knowledge(
         f"{base_query} fortune_disclaimer affiliate_offer cta_template persona_pain threads_hook prohibited_expression",
         limit=8,
@@ -58,6 +59,7 @@ def build_generation_context(request: GenerateContentRequest, product: dict[str,
         "threads_hooks": threads_hooks,
         "cta_templates": cta_templates,
         "fortune_disclaimers": fortune_disclaimers,
+        "facebook_imported_voice_knowledge": facebook_voice,
         "selected_affiliate_product": product,
         "selected_product_prohibited_claims": product.get("prohibited_claims") if product else None,
         "selected_persona_pain": selected_persona,
@@ -84,6 +86,7 @@ def build_generation_context(request: GenerateContentRequest, product: dict[str,
             "note URLも原則本文に直貼りせず、プロフィールのnoteへ誘導する",
             "電話占い・占いアプリ案件はnote記事内で比較・注意点・質問例と一緒に紹介する",
             "復縁、片思い、音信不通、曖昧な関係、相手の気持ちを断定しない",
+            "Facebook取り込み済みナレッジがある場合は、brand_voice、threads_hook、past_post、cta_templateを優先して自分らしい言葉に寄せる",
         ],
         "ideal_post_structure": [
             "読者の感情を受け止める",

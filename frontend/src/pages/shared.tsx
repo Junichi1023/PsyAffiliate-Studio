@@ -97,6 +97,9 @@ export function DraftCard({
         <span className={draft.publish_ready ? "badge green" : "badge muted-badge"}>
           {publishReadyLabel(draft.publish_ready)}
         </span>
+        <span className={disabledReason ? "badge muted-badge" : "badge green"}>
+          {disabledReason ? "Typefully予約不可" : "Typefully予約可能"}
+        </span>
         <span className={draft.direct_a8_link_detected ? "badge danger-badge" : "badge green"}>
           {draft.direct_a8_link_detected ? "A8直リンク検出" : "A8直リンクなし"}
         </span>
@@ -106,8 +109,8 @@ export function DraftCard({
         <span className={draft.note_page_id ? "badge green" : "badge muted-badge"}>
           {draft.note_page_id ? "note設定済み" : "note未設定"}
         </span>
-        {disabledReason && <span className="muted">{disabledReason}</span>}
-        {!disabledReason && !draft.publish_ready && draft.publish_block_reason && <span className="muted">{draft.publish_block_reason}</span>}
+        {disabledReason && <span className="muted">ブロック理由: {draft.publish_block_reason || disabledReason}</span>}
+        {!disabledReason && !draft.publish_ready && draft.publish_block_reason && <span className="muted">ブロック理由: {draft.publish_block_reason}</span>}
       </div>
       <div className="draft-controls">
         <select value={draft.status} onChange={(event) => onStatusChange(event.target.value as DraftStatus)}>

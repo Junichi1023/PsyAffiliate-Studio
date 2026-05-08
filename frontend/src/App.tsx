@@ -29,7 +29,7 @@ export default function App() {
         {page === "thirty-day-plan" && <ThirtyDayPlan />}
         {page === "typefully-jobs" && <TypefullyJobs />}
         {page === "knowledge" && <Knowledge />}
-        {page === "facebook-import" && <FacebookImport />}
+        {page === "facebook-import" && <FacebookImport onNavigate={setPage} />}
         {page === "products" && <AffiliateProducts />}
         {page === "note-funnel" && <NoteFunnelPages />}
         {page === "fortune-a8-offers" && <FortuneA8Offers />}

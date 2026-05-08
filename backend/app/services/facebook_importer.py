@@ -1,103 +1,69 @@
 from __future__ import annotations
 
 import json
-import re
-import zipfile
-from io import BytesIO
+from collections import Counter
 from typing import Any
 
-
-EMAIL_RE = re.compile(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}")
-PHONE_RE = re.compile(r"(?:\+?\d[\d\-()\s]{8,}\d)")
-URL_RE = re.compile(r"https?://\S+")
-
-SKIP_PATH_KEYWORDS = ("message", "messenger", "inbox", "chat", "security", "ads")
-TEXT_KEYS = {"text", "title", "description", "caption", "post", "content", "message"}
+from .importers.facebook_archive import FacebookImportError, extract_facebook_archive
+from .importers.knowledge_mapper import build_knowledge_candidates
+from .importers.pii_sanitizer import sanitize_text
 
 
-def sanitize_text(text: str) -> tuple[str, list[str]]:
-    notes: list[str] = []
-    sanitized = EMAIL_RE.sub("[メールアドレス削除]", text)
-    if sanitized != text:
-        notes.append("メールアドレスを削除")
-    text = sanitized
-    sanitized = PHONE_RE.sub("[電話番号削除]", text)
-    if sanitized != text:
-        notes.append("電話番号を削除")
-    text = sanitized
-    sanitized = URL_RE.sub("[URL削除]", text)
-    if sanitized != text:
-        notes.append("URLを削除")
-    return sanitized.strip(), notes
+def _redaction_summary(stats: Counter[str], skipped_files: list[str], sanitized_items: int) -> str:
+    payload = {
+        "email_removed": stats.get("email_removed", 0),
+        "phone_removed": stats.get("phone_removed", 0),
+        "url_removed": stats.get("url_removed", 0),
+        "facebook_url_removed": stats.get("facebook_url_removed", 0),
+        "instagram_url_removed": stats.get("instagram_url_removed", 0),
+        "x_url_removed": stats.get("x_url_removed", 0),
+        "postal_code_removed": stats.get("postal_code_removed", 0),
+        "long_id_removed": stats.get("long_id_removed", 0),
+        "credit_card_like_removed": stats.get("credit_card_like_removed", 0),
+        "username_removed": stats.get("username_removed", 0),
+        "line_id_removed": stats.get("line_id_removed", 0),
+        "address_like_removed": stats.get("address_like_removed", 0),
+        "name_like_warning": stats.get("name_like_warning", 0),
+        "skipped_message_files": stats.get("skipped_message_files", 0),
+        "message_files_processed": stats.get("message_files_processed", 0),
+        "skipped_json_files": stats.get("skipped_json_files", 0),
+        "duplicate_texts_skipped": stats.get("duplicate_texts_skipped", 0),
+        "sanitized_text_fragments": sanitized_items,
+        "skipped_files": skipped_files[:20],
+    }
+    return json.dumps(payload, ensure_ascii=False)
 
 
-def _walk_json(value: Any) -> list[str]:
-    texts: list[str] = []
-    if isinstance(value, dict):
-        for key, child in value.items():
-            if key in TEXT_KEYS and isinstance(child, str):
-                texts.append(child)
-            else:
-                texts.extend(_walk_json(child))
-    elif isinstance(value, list):
-        for child in value:
-            texts.extend(_walk_json(child))
-    return texts
+def build_candidates_from_facebook_zip(
+    filename: str,
+    payload: bytes,
+    limit: int = 40,
+    *,
+    max_items: int = 2000,
+    include_messages: bool = False,
+    use_ai_summary: bool = False,
+) -> dict[str, Any]:
+    """Build summarized knowledge candidates from a Facebook archive.
 
-
-def _category_for_text(text: str, index: int) -> str:
-    if any(word in text for word in ("恋", "好き", "連絡", "復縁", "片思い", "人間関係")):
-        return "persona_pain"
-    if any(word in text for word in ("思う", "大事", "大切", "感じ", "自分")):
-        return "brand_voice"
-    if index % 3 == 0:
-        return "threads_hook"
-    return "past_post"
-
-
-def build_candidates_from_facebook_zip(filename: str, payload: bytes, limit: int = 40) -> dict[str, Any]:
-    total_items = 0
-    candidates: list[dict[str, Any]] = []
-    redaction_counts: dict[str, int] = {}
-
-    with zipfile.ZipFile(BytesIO(payload)) as archive:
-        for info in archive.infolist():
-            path = info.filename.lower()
-            if not path.endswith(".json") or any(keyword in path for keyword in SKIP_PATH_KEYWORDS):
-                continue
-            try:
-                data = json.loads(archive.read(info).decode("utf-8"))
-            except Exception:
-                continue
-            for raw_text in _walk_json(data):
-                total_items += 1
-                if not raw_text or len(raw_text.strip()) < 24:
-                    continue
-                sanitized, notes = sanitize_text(raw_text)
-                if len(sanitized) < 24:
-                    continue
-                for note in notes:
-                    redaction_counts[note] = redaction_counts.get(note, 0) + 1
-                category = _category_for_text(sanitized, len(candidates))
-                candidates.append(
-                    {
-                        "title": f"Facebook由来ナレッジ候補 {len(candidates) + 1}",
-                        "category": category,
-                        "content": sanitized[:1600],
-                        "source": f"facebook:{filename}:{info.filename}",
-                        "confidence_score": 78 if category in {"brand_voice", "threads_hook"} else 70,
-                        "redaction_notes": "、".join(notes) if notes else "個人情報の明確なパターンなし",
-                        "selected": True,
-                    }
-                )
-                if len(candidates) >= limit:
-                    break
-            if len(candidates) >= limit:
-                break
-
-    redaction_summary = " / ".join(f"{key}: {value}" for key, value in redaction_counts.items()) or "PIIパターン検出なし"
+    `use_ai_summary` is accepted for forward compatibility. Phase 1 keeps the
+    transformation deterministic so imports work without an OpenAI API key.
+    """
+    archive_result = extract_facebook_archive(
+        payload,
+        include_messages=include_messages,
+        max_items=max(1, max_items),
+    )
+    candidates = build_knowledge_candidates(archive_result.texts[:max_items], filename)[:limit]
+    if not candidates:
+        raise FacebookImportError("Facebookデータからナレッジ候補を作成できませんでした。postsを含むJSON形式のZIPを選択してください。")
     return {
-        "total_items": total_items,
+        "total_items": archive_result.total_items,
+        "sanitized_items": archive_result.sanitized_items,
         "candidates": candidates,
-        "redaction_summary": redaction_summary,
+        "redaction_summary": _redaction_summary(
+            archive_result.stats,
+            archive_result.skipped_files,
+            archive_result.sanitized_items,
+        ),
+        "use_ai_summary": use_ai_summary,
     }

@@ -301,6 +301,7 @@ class AppSettingsOut(BaseModel):
     typefully_api_key_set: bool = False
     typefully_social_set_id: str | None = None
     typefully_default_schedule_mode: ScheduleMode = "draft_only"
+    profile_note_url: str | None = None
 
 
 class AppSettingsUpdate(BaseModel):
@@ -312,6 +313,7 @@ class AppSettingsUpdate(BaseModel):
     typefully_api_key: str | None = None
     typefully_social_set_id: str | None = None
     typefully_default_schedule_mode: ScheduleMode | None = None
+    profile_note_url: str | None = None
 
 
 class PublishResult(BaseModel):

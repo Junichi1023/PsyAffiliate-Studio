@@ -44,11 +44,11 @@ export default function Dashboard() {
             <FileText size={18} />
           </div>
           <ul className="todo-list">
-            <li>Facebookデータを取り込む</li>
-            <li>note導線URLを設定する</li>
-            <li>Threads投稿を3本作成する</li>
-            <li>承認済み投稿をTypefullyへ予約する</li>
-            <li>A8直リンクが入っていないか確認する</li>
+            <li>A8直リンクが入った投稿を修正する</li>
+            <li>プロフィールnote導線がない投稿を修正する</li>
+            <li>承認待ち投稿を確認する</li>
+            <li>Typefully未予約の承認済み投稿を予約する</li>
+            <li>Facebookナレッジを取り込む</li>
           </ul>
         </section>
       </div>

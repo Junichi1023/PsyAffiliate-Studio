@@ -8,6 +8,7 @@ export default function TypefullySettings() {
     typefully_api_key: "",
     typefully_social_set_id: "",
     typefully_default_schedule_mode: "draft_only" as ScheduleMode,
+    profile_note_url: "",
   });
 
   async function load() {
@@ -17,6 +18,7 @@ export default function TypefullySettings() {
       typefully_api_key: "",
       typefully_social_set_id: data.typefully_social_set_id ?? "",
       typefully_default_schedule_mode: data.typefully_default_schedule_mode,
+      profile_note_url: data.profile_note_url ?? "",
     });
   }
 
@@ -49,6 +51,10 @@ export default function TypefullySettings() {
             <option value="scheduled_time">指定日時</option>
           </select>
         </label>
+        <label>プロフィールnote URL
+          <input value={form.profile_note_url} placeholder="https://note.com/..." onChange={(e) => setForm({ ...form, profile_note_url: e.target.value })} />
+        </label>
+        <p className="field-note">Threadsプロフィールに置く電話占い紹介noteのURLです。Threads本文にはA8リンクを直貼りせず、このnoteへ誘導します。</p>
         <button className="primary" type="submit"><Save size={17} />保存</button>
       </form>
       <section className="panel">
@@ -57,6 +63,7 @@ export default function TypefullySettings() {
           <div><dt>APIキー</dt><dd>{settings?.typefully_api_key_set ? "設定済み" : "未設定"}</dd></div>
           <div><dt>Social Set ID</dt><dd>{settings?.typefully_social_set_id || "-"}</dd></div>
           <div><dt>標準予約方法</dt><dd>{settings?.typefully_default_schedule_mode}</dd></div>
+          <div><dt>プロフィールnote URL</dt><dd>{settings?.profile_note_url || "-"}</dd></div>
         </dl>
       </section>
     </section>

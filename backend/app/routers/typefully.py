@@ -7,10 +7,12 @@ from ..repositories import (
     get_draft,
     get_typefully_job,
     list_typefully_jobs,
+    registered_affiliate_urls,
     update_draft,
     update_typefully_job,
 )
 from ..schemas import TypefullyScheduleJob, TypefullyScheduleRequest, TypefullyScheduleResult
+from ..services.publishing_gate import validate_typefully_ready
 from ..services.typefully.client import create_or_schedule_threads_post
 
 
@@ -18,18 +20,9 @@ router = APIRouter(prefix="/api/typefully", tags=["typefully"])
 
 
 def _validate_typefully_ready(draft: dict) -> None:
-    if draft.get("status") != "approved":
-        raise HTTPException(status_code=400, detail="まだ承認済みではありません")
-    if (draft.get("compliance_score") or 0) < 90:
-        raise HTTPException(status_code=400, detail="安全性スコアが90未満です")
-    if (draft.get("empathy_score") or 0) < 75:
-        raise HTTPException(status_code=400, detail="寄り添いスコアが75未満です")
-    if draft.get("direct_a8_link_detected"):
-        raise HTTPException(status_code=400, detail="Threads本文にA8直リンクらしきURLが含まれています")
-    if not draft.get("profile_note_cta_included"):
-        raise HTTPException(status_code=400, detail="プロフィールnoteへの導線が含まれていません")
-    if not draft.get("note_page_id"):
-        raise HTTPException(status_code=400, detail="note記事URLが設定されていません")
+    ready, reasons = validate_typefully_ready(draft, registered_affiliate_urls())
+    if not ready:
+        raise HTTPException(status_code=400, detail=" / ".join(reasons))
 
 
 @router.post("/drafts/{draft_id}/schedule", response_model=TypefullyScheduleResult)

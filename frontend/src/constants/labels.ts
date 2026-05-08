@@ -134,6 +134,9 @@ export function mockPublishDisabledReason(draft: Draft) {
   if (draft.status !== "approved") return "まだ承認済みではありません";
   if ((draft.compliance_score ?? 0) < 90) return "安全性スコアが90未満です";
   if ((draft.empathy_score ?? 0) < 75) return "寄り添いスコアが75未満です";
+  if (draft.direct_a8_link_detected) return "A8直リンクらしきURLが含まれています";
+  if (!draft.profile_note_cta_included) return "プロフィールnoteへの導線がありません";
+  if (!draft.note_page_id) return "誘導先note記事が設定されていません";
   if (!draft.publish_ready) return "投稿準備OKになっていません";
   return null;
 }

@@ -8,7 +8,9 @@ from typing import Any
 from fastapi import HTTPException
 
 from .database import get_connection, row_to_dict
-from .services.routing_checks import detect_direct_a8_link, detect_profile_note_cta
+from .services.link_safety import detect_direct_affiliate_link
+from .services.note_cta_detector import detect_profile_note_cta
+from .services.publishing_gate import evaluate_publish_ready
 
 
 def utc_now() -> str:
@@ -50,30 +52,28 @@ def _registered_affiliate_urls() -> list[str]:
     return urls
 
 
+def registered_affiliate_urls() -> list[str]:
+    return _registered_affiliate_urls()
+
+
 def _draft_text(data: dict[str, Any]) -> str:
     return "\n".join(str(part) for part in [data.get("body"), data.get("caption"), data.get("cta")] if part)
 
 
 def _apply_draft_route_checks(data: dict[str, Any]) -> dict[str, Any]:
     text = _draft_text(data)
-    data["direct_a8_link_detected"] = 1 if detect_direct_a8_link(text, _registered_affiliate_urls()) else 0
-    data["profile_note_cta_included"] = 1 if detect_profile_note_cta(text) else 0
+    link_result = detect_direct_affiliate_link(text, _registered_affiliate_urls())
+    note_result = detect_profile_note_cta(text)
+    data["direct_a8_link_detected"] = 1 if link_result["detected"] else 0
+    data["profile_note_cta_included"] = 1 if note_result["detected"] else 0
     data["traffic_destination"] = data.get("traffic_destination") or "profile_note"
     data["human_review_required"] = 1 if data.get("human_review_required", True) else 0
     return data
 
 
 def _publish_evaluation(data: dict[str, Any]) -> tuple[int, str | None]:
-    reasons: list[str] = []
-    if data.get("status") != "approved":
-        reasons.append("まだ承認済みではありません")
-    if (data.get("compliance_score") or 0) < 90:
-        reasons.append("安全性スコアが90未満です")
-    if (data.get("empathy_score") or 0) < 75:
-        reasons.append("寄り添いスコアが75未満です")
-    if reasons:
-        return 0, "; ".join(reasons)
-    return 1, None
+    result = evaluate_publish_ready(data, registered_urls=_registered_affiliate_urls())
+    return (1 if result["ready"] else 0), result["block_reason"]
 
 
 def list_knowledge() -> list[dict[str, Any]]:
@@ -783,7 +783,13 @@ def update_threads_30day_plan_task(item_id: int, data: dict[str, Any]) -> dict[s
     return dict(updated)
 
 
-def create_import_session(source_name: str | None, total_items: int, candidates: list[dict[str, Any]], redaction_summary: str) -> dict[str, Any]:
+def create_import_session(
+    source_name: str | None,
+    total_items: int,
+    candidates: list[dict[str, Any]],
+    redaction_summary: str,
+    sanitized_items: int | None = None,
+) -> dict[str, Any]:
     now = utc_now()
     with get_connection() as connection:
         cursor = connection.execute(
@@ -794,7 +800,17 @@ def create_import_session(source_name: str | None, total_items: int, candidates:
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            ("facebook", source_name, "preview", total_items, len(candidates), len(candidates), redaction_summary, now, now),
+            (
+                "facebook",
+                source_name,
+                "preview",
+                total_items,
+                sanitized_items if sanitized_items is not None else len(candidates),
+                len(candidates),
+                redaction_summary,
+                now,
+                now,
+            ),
         )
         session_id = cursor.lastrowid
         for candidate in candidates:
