@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import re
-from collections import Counter
-
 from .facebook_archive import ExtractedText
 
 
@@ -17,25 +14,18 @@ def _count_terms(texts: list[str], terms: tuple[str, ...]) -> int:
     return sum(joined.count(term) for term in terms)
 
 
-def _safe_micro_phrases(texts: list[str], limit: int = 8) -> list[str]:
-    phrases: list[str] = []
-    seen: set[str] = set()
-    for text in texts:
-        sentences = re.split(r"[。！？!?。\n]+", text)
-        for sentence in sentences:
-            compact = re.sub(r"\s+", " ", sentence).strip()
-            if not 10 <= len(compact) <= 45:
-                continue
-            if any(marker in compact for marker in ("[メール", "[電話", "[URL", "[住所", "[ID", "さん", "ちゃん", "君", "くん")):
-                continue
-            if compact in seen:
-                continue
-            if any(word in compact for word in SOFT_WORDS + REFLECTION_WORDS):
-                phrases.append(compact)
-                seen.add(compact)
-            if len(phrases) >= limit:
-                return phrases
-    return phrases
+def _inferred_phrase_guidance(summary: dict[str, int | list[str]]) -> list[str]:
+    """Return synthetic guidance instead of copying Facebook text fragments."""
+    guidance = [
+        "実投稿の文をそのまま使わず、短くやわらかい一文から入る。",
+        "断定よりも「かもしれない」「一度整理してみる」のような余白を残す。",
+        "相手の気持ちを決めつけず、読者自身の気持ちに戻す。",
+    ]
+    if int(summary.get("daily_count", 0)) > 0:
+        guidance.append("日常の小さな場面や体感を添えると、発信者らしさが出やすい。")
+    if int(summary.get("reflection_count", 0)) > 0:
+        guidance.append("最後は大きな決断ではなく、今日できる小さな確認に落とす。")
+    return guidance
 
 
 def _style_summary(texts: list[str]) -> dict[str, int | list[str]]:
@@ -44,7 +34,6 @@ def _style_summary(texts: list[str]) -> dict[str, int | list[str]]:
         "daily_count": _count_terms(texts, DAILY_WORDS),
         "soft_count": _count_terms(texts, SOFT_WORDS),
         "reflection_count": _count_terms(texts, REFLECTION_WORDS),
-        "micro_phrases": _safe_micro_phrases(texts),
     }
 
 
@@ -63,15 +52,12 @@ def _candidate(title: str, category: str, content: str, source: str, confidence:
 def build_knowledge_candidates(texts: list[ExtractedText], filename: str) -> list[dict]:
     sanitized_texts = [item.text for item in texts]
     summary = _style_summary(sanitized_texts)
-    micro_phrases = summary["micro_phrases"]
     message_note = "Messenger由来のテキストを含みます。登録前に個人情報を必ず確認してください" if any(item.from_messages for item in texts) else ""
     common_notes = ["生投稿全文は保存せず、複数投稿から要約化"]
     if message_note:
         common_notes.append(message_note)
 
-    phrase_line = ""
-    if micro_phrases:
-        phrase_line = "安全そうな短い言い回し例: " + " / ".join(micro_phrases[:5])
+    phrase_line = "実投稿をコピーしない言い換え方: " + " / ".join(_inferred_phrase_guidance(summary))
 
     source = f"facebook_import:{filename}"
     return [
@@ -169,4 +155,3 @@ def build_knowledge_candidates(texts: list[ExtractedText], filename: str) -> lis
             common_notes,
         ),
     ]
-

@@ -49,6 +49,23 @@ def test_extracts_posts_from_nested_facebook_zip():
     assert "恋愛の不安" in result.texts[0].text
 
 
+def test_extracts_posts_from_facebook_html_export():
+    html = """
+    <html><body>
+      <section class="_a6-g">
+        <h2 class="_2ph_ _a6-h _a6-i">2026年5月7日</h2>
+        <div class="_2ph_ _a6-p">札幌で友人と話していると、恋愛の不安は相手を変えるより自分の気持ちを整理することが大事だと感じました。</div>
+      </section>
+    </body></html>
+    """
+    payload = _zip({"your_facebook_activity/posts/your_posts__check_ins__photos_and_videos_1.html": html})
+    result = extract_facebook_archive(payload)
+    assert result.sanitized_items == 1
+    assert result.stats["html_files_processed"] == 1
+    assert result.stats["json_files_processed"] == 0
+    assert "恋愛の不安" in result.texts[0].text
+
+
 def test_include_messages_false_skips_inbox():
     payload = _zip({
         "posts/your_posts_1.json": _json_bytes({"posts": [{"text": _sample_text()}]}),
@@ -98,6 +115,28 @@ def test_preview_api_creates_session_and_summary_candidates(client: TestClient):
     assert "傾向" in candidates[0]["content"] or "要約" in candidates[0]["redaction_notes"]
 
 
+def test_preview_api_accepts_html_facebook_export(client: TestClient):
+    html = """
+    <html><body>
+      <section><h2>2026年5月7日</h2><div>札幌で友人と話していると、恋愛の不安は相手を変えるより自分の気持ちを整理することが大事だと感じました。</div></section>
+    </body></html>
+    """
+    payload = _zip({"your_facebook_activity/posts/your_posts__check_ins__photos_and_videos_1.html": html})
+    response = client.post(
+        "/api/import/facebook/preview",
+        data={"max_items": "500", "include_messages": "false", "use_ai_summary": "false"},
+        files={"file": ("facebook-html.zip", payload, "application/zip")},
+    )
+    assert response.status_code == 201
+    session = response.json()
+    summary = json.loads(session["redaction_summary"])
+    assert session["sanitized_items"] == 1
+    assert summary["html_files_processed"] == 1
+    candidates = client.get(f"/api/import/sessions/{session['id']}/candidates").json()
+    assert len(candidates) >= 6
+    assert "札幌で友人と話していると" not in candidates[0]["content"]
+
+
 def test_commit_selected_candidates_only(client: TestClient):
     payload = _zip({"posts/your_posts_1.json": _json_bytes({"posts": [{"text": _sample_text()}]})})
     session = client.post("/api/import/facebook/preview", files={"file": ("facebook.zip", payload, "application/zip")}).json()
@@ -140,4 +179,3 @@ def test_publishing_gate_and_draft_auto_publish_ready(client: TestClient):
     assert unsafe["publish_ready"] is False
     assert unsafe["direct_a8_link_detected"] is True
     assert unsafe["publish_block_reason"]
-

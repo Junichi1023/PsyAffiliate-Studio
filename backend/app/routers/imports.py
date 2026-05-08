@@ -29,13 +29,18 @@ async def preview_facebook_zip(
     filename = file.filename or "facebook.zip"
     if not filename.lower().endswith(".zip"):
         raise HTTPException(status_code=400, detail="FacebookからダウンロードしたZIPファイルを、解凍せずそのまま選択してください。")
-    payload = await file.read()
-    if not payload:
+    try:
+        file.file.seek(0, 2)
+        size = file.file.tell()
+        file.file.seek(0)
+    except Exception:
+        size = 0
+    if not size:
         raise HTTPException(status_code=400, detail="選択されたファイルが空です。FacebookのZIPファイルを選択してください。")
     try:
         result = build_candidates_from_facebook_zip(
             filename,
-            payload,
+            file.file,
             max_items=max(1, min(max_items, 5000)),
             include_messages=include_messages,
             use_ai_summary=use_ai_summary,

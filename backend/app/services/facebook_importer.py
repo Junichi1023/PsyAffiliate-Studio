@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from collections import Counter
-from typing import Any
+from typing import Any, BinaryIO
 
 from .importers.facebook_archive import FacebookImportError, extract_facebook_archive
 from .importers.knowledge_mapper import build_knowledge_candidates
@@ -27,6 +27,9 @@ def _redaction_summary(stats: Counter[str], skipped_files: list[str], sanitized_
         "skipped_message_files": stats.get("skipped_message_files", 0),
         "message_files_processed": stats.get("message_files_processed", 0),
         "skipped_json_files": stats.get("skipped_json_files", 0),
+        "skipped_html_files": stats.get("skipped_html_files", 0),
+        "json_files_processed": stats.get("json_files_processed", 0),
+        "html_files_processed": stats.get("html_files_processed", 0),
         "duplicate_texts_skipped": stats.get("duplicate_texts_skipped", 0),
         "sanitized_text_fragments": sanitized_items,
         "skipped_files": skipped_files[:20],
@@ -36,7 +39,7 @@ def _redaction_summary(stats: Counter[str], skipped_files: list[str], sanitized_
 
 def build_candidates_from_facebook_zip(
     filename: str,
-    payload: bytes,
+    payload: bytes | BinaryIO,
     limit: int = 40,
     *,
     max_items: int = 2000,

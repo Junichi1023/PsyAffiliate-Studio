@@ -25,6 +25,9 @@ const REDACTION_LABELS: Record<string, string> = {
   skipped_message_files: "Messenger除外ファイル",
   message_files_processed: "Messenger処理ファイル",
   skipped_json_files: "壊れたJSONなどでスキップ",
+  skipped_html_files: "壊れたHTMLなどでスキップ",
+  json_files_processed: "JSON処理ファイル",
+  html_files_processed: "HTML処理ファイル",
   duplicate_texts_skipped: "重複テキスト除外",
   sanitized_text_fragments: "候補生成に使った断片",
 };
@@ -150,7 +153,7 @@ export default function FacebookImport({ onNavigate }: { onNavigate?: (page: Pag
       <section className="panel form-panel">
         <div className="panel-title"><h3>Facebook取り込み</h3><Import size={18} /></div>
         <p className="page-description compact">
-          FacebookからダウンロードしたZIPを選択してください。推奨形式は「JSON」です。このアプリは生データを保存せず、個人情報を除去したうえで「自分らしい口調・価値観・投稿傾向」だけをナレッジ候補にします。
+          FacebookからダウンロードしたZIPを選択してください。JSON形式だけでなくHTML形式のエクスポートにも対応しています。このアプリは生データを保存せず、個人情報を除去したうえで「自分らしい口調・価値観・投稿傾向」だけをナレッジ候補にします。
         </p>
         <div className="step-list">
           <span>Step 1: ZIPを選ぶ</span>
